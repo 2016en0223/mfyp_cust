@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "1048012245072",
+    "firebase_url": "https://mfyptechnician-app-default-rtdb.firebaseio.com",
+    "project_id": "mfyptechnician-app",
+    "storage_bucket": "mfyptechnician-app.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1048012245072:android:f7d638043cb57209cba955",
+        "android_client_info": {
+          "package_name": "com.mfyp.cust"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1048012245072-b34597u9dp7983o1l9gga67d4gv95ic6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDX7qXPgTueXavLxcLp8VN9M89XnGdmo_U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1048012245072-b34597u9dp7983o1l9gga67d4gv95ic6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1048012245072:android:1b46c4b2fb81c0d3cba955",
+        "android_client_info": {
+          "package_name": "com.mfyp.technician"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1048012245072-b34597u9dp7983o1l9gga67d4gv95ic6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDX7qXPgTueXavLxcLp8VN9M89XnGdmo_U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1048012245072-b34597u9dp7983o1l9gga67d4gv95ic6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
