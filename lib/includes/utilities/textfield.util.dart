@@ -28,7 +28,7 @@ class MFYPTextField extends StatelessWidget {
     required this.obscureText,
     this.labelText,
     this.hintText,
-    this.contentPadding: const EdgeInsets.symmetric(
+    this.contentPadding = const EdgeInsets.symmetric(
       vertical: 0,
     ),
     this.validator,

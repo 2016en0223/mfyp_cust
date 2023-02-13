@@ -19,7 +19,7 @@ class MFYPButton extends StatelessWidget {
         fixedSize: Size.fromWidth(
           width,
         ),
-        primary: AppColor.primaryColor,
+        backgroundColor: AppColor.primaryColor,
         elevation: 0,
       ),
       child: Padding(

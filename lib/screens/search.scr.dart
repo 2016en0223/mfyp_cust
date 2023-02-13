@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:mfyp_cust/screens/home.scr.dart';
-
 import '../includes/utilities/colors.dart';
-import '../includes/utilities/textfield.util.dart';
+import 'home.scr.dart';
 
 class MFYPSearchScreen extends StatefulWidget {
   const MFYPSearchScreen({super.key});
@@ -39,7 +37,7 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
                         color: AppColor.primaryColor,
                       ),
                     ),
-                    Center(
+                    const Center(
                       child: Text(
                         "Search Nearby Shop",
                         style: TextStyle(
