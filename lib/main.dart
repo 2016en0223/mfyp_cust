@@ -3,8 +3,6 @@ import 'package:mfyp_cust/screens/main.scr.dart';
 import 'package:provider/provider.dart';
 import 'includes/handlers/user.info.handler.provider.dart';
 import 'includes/utilities/colors.dart';
-import 'screens/home.scr.dart';
-import 'screens/search.scr.dart';
 
 void main() {
   runApp(ChangeNotifierProvider(

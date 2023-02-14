@@ -5,18 +5,21 @@ import 'package:mfyp_cust/screens/history.scr.dart';
 import 'account.scr.dart';
 import 'home.scr.dart';
 
-
 class MFYPMainScreen extends StatefulWidget {
   const MFYPMainScreen({Key? key}) : super(key: key);
 
   @override
   MFYPMainScreenState createState() => MFYPMainScreenState();
 }
+
 LocationPermission? userLocationPermission;
 
 deviceLocationPermission() async {
   userLocationPermission = await Geolocator.requestPermission();
   if (userLocationPermission == LocationPermission.denied) {
+    userLocationPermission = await Geolocator.requestPermission();
+  }
+  if (userLocationPermission == LocationPermission.whileInUse) {
     userLocationPermission = await Geolocator.requestPermission();
   }
 }
@@ -90,4 +93,3 @@ class MFYPMainScreenState extends State<MFYPMainScreen>
     );
   }
 }
-

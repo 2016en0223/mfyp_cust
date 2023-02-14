@@ -138,10 +138,11 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                   Provider.of<MFYPUserInfo>(context).userCurrentPointLocation ==
                           null
                       ? "Loading..."
-                      : context
+                      : (context
                               .read<MFYPUserInfo>()
                               .userCurrentPointLocation!
-                          .formattedAddress!,
+                              .formattedAddress!)
+                          .substring(0, 8),
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ],
