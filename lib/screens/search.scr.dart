@@ -41,7 +41,6 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
       }
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
