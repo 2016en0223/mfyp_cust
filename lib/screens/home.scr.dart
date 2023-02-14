@@ -6,9 +6,11 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mfyp_cust/includes/handlers/user.info.handler.provider.dart';
 import 'package:provider/provider.dart';
 
+import '../includes/global.dart';
 import '../includes/mixins/user.reversegeo.mixin.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
+import 'main.scr.dart';
 import 'search.scr.dart';
 
 class MFYPHomeScreen extends StatefulWidget {
@@ -50,30 +52,24 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   }
 
   // Future<void> drawRoute() {}
-  Position? userCurrentPosition;
-  // var geolocator = Geolocator;
+  // Position? userCurrentPosition;
+  var geolocator = Geolocator;
   LocationPermission? userLocationPermission;
-
-  deviceLocationPermission() async {
-    userLocationPermission = await Geolocator.requestPermission();
-    if (userLocationPermission == LocationPermission.denied) {
-      userLocationPermission = await Geolocator.requestPermission();
-    }
-  }
 
   getUserCurrentLocation() async {
     userCurrentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     LatLng userCurrentPostionLatLng =
         LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
-
     CameraPosition userCurrentLocationCam =
         CameraPosition(target: userCurrentPostionLatLng, zoom: 15);
     newGMController!
         .animateCamera(CameraUpdate.newCameraPosition(userCurrentLocationCam));
 
-    String test = await UserCurrentLocation.userReverseGeocoding(
+    String test =
+        await UserMixin.userReverseGeocoding(
         userCurrentPosition!, context);
+        
     print("Is this even working at all?  $test");
   }
 
@@ -138,6 +134,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                   width: 35,
                 ),
                 Text(
+                  overflow: TextOverflow.ellipsis,
                   Provider.of<MFYPUserInfo>(context).userCurrentPointLocation ==
                           null
                       ? "Loading..."

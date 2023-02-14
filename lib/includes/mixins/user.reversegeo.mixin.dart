@@ -5,7 +5,7 @@ import '../handlers/user.info.handler.provider.dart';
 import '../models/location.direction.model.dart';
 import '../plugins/request.url.plugins.dart';
 
-class UserCurrentLocation {
+class UserMixin {
   static Future<String> userReverseGeocoding(
       Position userCurrentPosition, context) async {
     String formattedAddress = "";

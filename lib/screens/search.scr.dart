@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:mfyp_cust/includes/api_key.dart';
+import 'package:mfyp_cust/includes/models/predicted_nearby_places.dart';
+import '../includes/global.dart';
+import '../includes/plugins/request.url.plugins.dart';
 import '../includes/utilities/colors.dart';
 import 'home.scr.dart';
 
@@ -9,9 +13,29 @@ class MFYPSearchScreen extends StatefulWidget {
   State<MFYPSearchScreen> createState() => _MFYPSearchScreenState();
 }
 
-final TextEditingController searchNearby = TextEditingController();
-
 class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
+  List<MFYPNearBy> predictedNearby = [];
+
+  void nearbySearch(String nearby) async {
+    if (nearby.isNotEmpty) {
+      String placeURL =
+          "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$nearby&types=car_repair&location=${userCurrentPosition!.latitude}%2C${userCurrentPosition!.longitude}&radius=1500&components=country:NG&key=$apiKey";
+      // String placeURL =
+      // "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=auto&types=car_repair&location=${userCurrentPosition!.latitude}%2C${userCurrentPosition!.longitude}&radius=1500&components=country:NG&key=AIzaSyDX7qXPgTueXavLxcLp8VN9M89XnGdmo_U";
+      var urlRequest = await requestURL(placeURL);
+
+      if (urlRequest["status"] == "OK") {
+        var nearbyPlaces = urlRequest["predictions"];
+        var nearbyPredictionList = (nearbyPlaces as List)
+            .map(
+              (jsonresponse) => MFYPNearBy.fromJson(jsonresponse),
+            )
+            .toList();
+        predictedNearby = nearbyPredictionList;
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,8 +49,8 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
               children: [
                 Stack(
                   children: [
-                    SizedBox.fromSize(
-                      size: const Size.fromWidth(20),
+                    const SizedBox(
+                      width: 20,
                     ),
                     GestureDetector(
                       onTap: (() => Navigator.of(context).push(
@@ -45,8 +69,8 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
                         ),
                       ),
                     ),
-                    SizedBox.fromSize(
-                      size: const Size.fromWidth(20),
+                    const SizedBox(
+                      width: 20,
                     ),
                   ],
                 ),
@@ -56,18 +80,21 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
                 Row(
                   children: [
                     const Icon(Icons.location_searching_outlined),
-                    SizedBox.fromSize(
-                      size: const Size.fromWidth(20),
+                    const SizedBox(
+                      width: 20,
                     ),
-                    TextField(
-                      decoration: const InputDecoration(
-                        hintText: "Search here...",
+                    Expanded(
+                      child: TextField(
+                        decoration: const InputDecoration(
+                          hintText: "Search here...",
+                        ),
+                        keyboardType: TextInputType.text,
+                        onChanged: (value) => nearbySearch(value),
                       ),
-                      keyboardType: TextInputType.text,
-                      obscureText: false,
-                      controller: searchNearby,
-                      onChanged: (value) {},
-                    )
+                    ),
+                    const SizedBox(
+                      width: 20,
+                    ),
                   ],
                 )
               ],
