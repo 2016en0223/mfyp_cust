@@ -1,22 +1,23 @@
+//------------------------------Dependencies------------------------------------
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:mfyp_cust/includes/handlers/user.info.handler.provider.dart';
-import 'package:mfyp_cust/includes/plugins/polyline.plugin.dart';
-import 'package:mfyp_cust/includes/utilities/dialog.util.dart';
 import 'package:provider/provider.dart';
 import '../includes/api_key.dart';
 import '../includes/global.dart';
+import '../includes/handlers/user.info.handler.provider.dart';
 import '../includes/mixins/user.reversegeo.mixin.dart';
 import '../includes/models/direction.details.model.dart';
+import '../includes/plugins/polyline.plugin.dart';
 import '../includes/plugins/request.url.plugins.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
+import '../includes/utilities/dialog.util.dart';
 import 'main.scr.dart';
 import 'search.scr.dart';
-
+//----------------------------------End-----------------------------------------
 class MFYPHomeScreen extends StatefulWidget {
   const MFYPHomeScreen({super.key});
 
@@ -33,11 +34,16 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     zoom: 15,
   );
 
+//--------------------------------Variables--------------------------------------
+  var geolocator = Geolocator;
+  LocationPermission? userLocationPermission;
   Set<Marker> markerSet = {};
   Set<Circle> circleSet = {};
   List<LatLng> decodedLatLng = [];
   Set<Polyline> polylineSet = {};
   double googleMapPadding = 0;
+//-----------------------------------End-----------------------------------------
+
   @override
   void initState() {
     super.initState();
@@ -55,47 +61,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       ),
     );
   }
-
-  Future<DirectionDetails> drawRouteEncodedPoints(
-      LatLng userLatLng, LatLng techSPLatLng) async {
-    String directionURL =
-        "https://maps.googleapis.com/maps/api/directions/json?origin=${userLatLng.latitude},${userLatLng.longitude}&destination=${techSPLatLng.latitude},${techSPLatLng.longitude}&key=$apiKey";
-    var urlRequest = await requestURL(directionURL);
-
-    DirectionDetails directionInfo = DirectionDetails();
-    directionInfo.distanceText =
-        urlRequest["routes"][0]["legs"]["distance"]["text"];
-    directionInfo.distanceValue =
-        urlRequest["routes"][0]["legs"]["distance"]["value"];
-    directionInfo.durationText =
-        urlRequest["routes"][0]["legs"]["duration"]["text"];
-    directionInfo.durationValue =
-        urlRequest["routes"][0]["legs"]["duration"]["value"];
-    directionInfo.polylinePoints =
-        urlRequest["routes"][0]["overview_polyline"]["points"];
-    return directionInfo;
-  }
-
-  // Position? userCurrentPosition;
-  var geolocator = Geolocator;
-  LocationPermission? userLocationPermission;
-
-  getUserCurrentLocation() async {
-    userCurrentPosition = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-    LatLng userCurrentPostionLatLng =
-        LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
-    CameraPosition userCurrentLocationCam =
-        CameraPosition(target: userCurrentPostionLatLng, zoom: 15);
-    newGMController!
-        .animateCamera(CameraUpdate.newCameraPosition(userCurrentLocationCam));
-
-    String test =
-        await UserMixin.userReverseGeocoding(userCurrentPosition!, context);
-
-    print("Is this even working at all?  $test");
-  }
-
+  
+//-------------------------------User Interface---------------------------------
   googleMap() => GoogleMap(
       initialCameraPosition: _initialCamera,
       mapType: MapType.normal,
@@ -222,6 +189,45 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       ),
     );
   }
+//-----------------------------------End-----------------------------------------
+
+//---------------------------------Logics---------------------------------------
+
+  getUserCurrentLocation() async {
+    userCurrentPosition = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high);
+    LatLng userCurrentPostionLatLng =
+        LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
+    CameraPosition userCurrentLocationCam =
+        CameraPosition(target: userCurrentPostionLatLng, zoom: 15);
+    newGMController!
+        .animateCamera(CameraUpdate.newCameraPosition(userCurrentLocationCam));
+
+    String test =
+        await UserMixin.userReverseGeocoding(userCurrentPosition!, context);
+
+    print("Is this even working at all?  $test");
+  }
+
+  Future<DirectionDetails> drawRouteEncodedPoints(
+      LatLng userLatLng, LatLng techSPLatLng) async {
+    String directionURL =
+        "https://maps.googleapis.com/maps/api/directions/json?origin=${userLatLng.latitude},${userLatLng.longitude}&destination=${techSPLatLng.latitude},${techSPLatLng.longitude}&key=$apiKey";
+    var urlRequest = await requestURL(directionURL);
+
+    DirectionDetails directionInfo = DirectionDetails();
+    directionInfo.distanceText =
+        urlRequest["routes"][0]["legs"]["distance"]["text"];
+    directionInfo.distanceValue =
+        urlRequest["routes"][0]["legs"]["distance"]["value"];
+    directionInfo.durationText =
+        urlRequest["routes"][0]["legs"]["duration"]["text"];
+    directionInfo.durationValue =
+        urlRequest["routes"][0]["legs"]["duration"]["value"];
+    directionInfo.polylinePoints =
+        urlRequest["routes"][0]["overview_polyline"]["points"];
+    return directionInfo;
+  }
 
   Future drawPolylines() async {
     var userPosition = Provider.of<MFYPUserInfo>(context, listen: false)
@@ -306,4 +312,5 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       circleSet.add(techSPCircle);
     });
   }
+//-----------------------------------End-----------------------------------------
 }
