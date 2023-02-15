@@ -36,7 +36,7 @@ class MFYPListView extends StatelessWidget {
       print("The location name is " + userDirection.locationName!);
       Provider.of<MFYPUserInfo>(context, listen: false)
           .getServiceProviderPoint(userDirection);
-      Navigator.pop(context, "Home");
+      Navigator.of(context).pop("Home");
     }
   }
 

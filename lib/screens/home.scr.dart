@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:mfyp_cust/includes/api_key.dart';
 import 'package:mfyp_cust/includes/handlers/user.info.handler.provider.dart';
-import 'package:mfyp_cust/includes/models/direction.details.model.dart';
-import 'package:mfyp_cust/includes/plugins/request.url.plugins.dart';
+import 'package:mfyp_cust/includes/plugins/polyline.plugin.dart';
+import 'package:mfyp_cust/includes/utilities/dialog.util.dart';
 import 'package:provider/provider.dart';
 import '../includes/global.dart';
 import '../includes/mixins/user.reversegeo.mixin.dart';
@@ -32,7 +32,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
   late Set<Marker> markerSet;
   late Set<Circle> circleSet;
-  late List<LatLng> decodedLatLng;
+  List<LatLng> decodedLatLng = [];
+  Set<Polyline> polylineSet = {};
   double googleMapPadding = 0;
   @override
   void initState() {
@@ -50,26 +51,6 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         ],
       ),
     );
-  }
-
-  Future<DirectionDetails> drawRouteEncodedPoints(
-      LatLng userLatLng, LatLng techSPLatLng) async {
-    String directionURL =
-        "https://maps.googleapis.com/maps/api/directions/json?origin=${userLatLng.latitude},${userLatLng.longitude}&destination=${techSPLatLng.latitude},${techSPLatLng.longitude}&key=$apiKey";
-    var urlRequest = await requestURL(directionURL);
-
-    DirectionDetails directionInfo = DirectionDetails();
-    directionInfo.distanceText =
-        urlRequest["routes"][0]["legs"]["distance"]["text"];
-    directionInfo.distanceValue =
-        urlRequest["routes"][0]["legs"]["distance"]["value"];
-    directionInfo.durationText =
-        urlRequest["routes"][0]["legs"]["duration"]["text"];
-    directionInfo.durationValue =
-        urlRequest["routes"][0]["legs"]["duration"]["value"];
-    directionInfo.polylinePoints =
-        urlRequest["routes"][0]["overview_polyline"]["points"];
-    return directionInfo;
   }
 
   // Position? userCurrentPosition;
@@ -100,6 +81,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       zoomGesturesEnabled: true,
       zoomControlsEnabled: true,
       padding: EdgeInsets.only(bottom: googleMapPadding),
+      polylines: polylineSet,
       onMapCreated: (GoogleMapController controller) {
         _mapControllerCompleter.complete(controller);
         newGMController = controller;
@@ -178,13 +160,15 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onTap: (() {
-                        var searchScreen = Navigator.of(context).push(
+                      onTap: (() async {
+                        var searchScreen = await Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (ctx) => const MFYPSearchScreen(),
                           ),
                         );
-                        if (searchScreen == "Home") {}
+                        if (searchScreen == "Home") {
+                          await drawPolylines();
+                        }
                       }),
                       child: Text(
                         Provider.of<MFYPUserInfo>(context).techSPLocation ==
@@ -212,5 +196,44 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         ),
       ),
     );
+  }
+
+  Future drawPolylines() async {
+    var userPosition =
+        Provider.of<MFYPUserInfo>(context).userCurrentPointLocation;
+    var techPosition = Provider.of<MFYPUserInfo>(context).techSPLocation;
+
+    LatLng userLatLng =
+        LatLng(userPosition!.locationLat!, userPosition.locationLong!);
+    LatLng techSPLatLng =
+        LatLng(techPosition!.locationLat!, techPosition.locationLong!);
+    showDialog(
+        context: context,
+        builder: (BuildContext context) =>
+            const MFYPDialog(message: "Please wait..."));
+    var getEncodedPoint = await getEncodedPoints(userLatLng, techSPLatLng);
+    Navigator.of(context).pop();
+
+    PolylinePoints points = PolylinePoints();
+    List<PointLatLng> decodedpoints =
+        points.decodePolyline(getEncodedPoint!.polylinePoints!);
+    if (decodedpoints.isNotEmpty) {
+      for (var point in decodedpoints) {
+        decodedLatLng.add(LatLng(point.latitude, point.longitude));
+      }
+    }
+    polylineSet.clear();
+    setState(() {
+      Polyline drawLine = Polyline(
+          polylineId: const PolylineId("1"),
+          width: 5,
+          color: AppColor.primaryColor,
+          jointType: JointType.round,
+          points: decodedLatLng,
+          endCap: Cap.roundCap,
+          startCap: Cap.roundCap,
+          geodesic: true);
+      polylineSet.add(drawLine);
+    });
   }
 }
