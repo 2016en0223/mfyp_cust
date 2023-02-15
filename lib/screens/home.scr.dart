@@ -1,11 +1,12 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mfyp_cust/includes/api_key.dart';
 import 'package:mfyp_cust/includes/handlers/user.info.handler.provider.dart';
+import 'package:mfyp_cust/includes/models/direction.details.model.dart';
+import 'package:mfyp_cust/includes/plugins/request.url.plugins.dart';
 import 'package:provider/provider.dart';
-
 import '../includes/global.dart';
 import '../includes/mixins/user.reversegeo.mixin.dart';
 import '../includes/utilities/button.util.dart';
@@ -51,7 +52,26 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     );
   }
 
-  // Future<void> drawRoute() {}
+  Future<DirectionDetails> drawRouteEncodedPoints(
+      LatLng userLatLng, LatLng techSPLatLng) async {
+    String directionURL =
+        "https://maps.googleapis.com/maps/api/directions/json?origin=${userLatLng.latitude},${userLatLng.longitude}&destination=${techSPLatLng.latitude},${techSPLatLng.longitude}&key=$apiKey";
+    var urlRequest = await requestURL(directionURL);
+
+    DirectionDetails directionInfo = DirectionDetails();
+    directionInfo.distanceText =
+        urlRequest["routes"][0]["legs"]["distance"]["text"];
+    directionInfo.distanceValue =
+        urlRequest["routes"][0]["legs"]["distance"]["value"];
+    directionInfo.durationText =
+        urlRequest["routes"][0]["legs"]["duration"]["text"];
+    directionInfo.durationValue =
+        urlRequest["routes"][0]["legs"]["duration"]["value"];
+    directionInfo.polylinePoints =
+        urlRequest["routes"][0]["overview_polyline"]["points"];
+    return directionInfo;
+  }
+
   // Position? userCurrentPosition;
   var geolocator = Geolocator;
   LocationPermission? userLocationPermission;
@@ -67,9 +87,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         .animateCamera(CameraUpdate.newCameraPosition(userCurrentLocationCam));
 
     String test =
-        await UserMixin.userReverseGeocoding(
-        userCurrentPosition!, context);
-        
+        await UserMixin.userReverseGeocoding(userCurrentPosition!, context);
+
     print("Is this even working at all?  $test");
   }
 
@@ -159,14 +178,22 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.start,
                   children: [
                     GestureDetector(
-                      onTap: (() => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (ctx) => const MFYPSearchScreen(),
-                            ),
-                          )),
-                      child: const Text(
-                        "Workshop location",
-                        style: TextStyle(fontWeight: FontWeight.w700),
+                      onTap: (() {
+                        var searchScreen = Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (ctx) => const MFYPSearchScreen(),
+                          ),
+                        );
+                        if (searchScreen == "Home") {}
+                      }),
+                      child: Text(
+                        Provider.of<MFYPUserInfo>(context).techSPLocation ==
+                                null
+                            ? "Workshop location"
+                            : Provider.of<MFYPUserInfo>(context)
+                                .techSPLocation!
+                                .locationName!,
+                        style: const TextStyle(fontWeight: FontWeight.w700),
                       ),
                     )
                   ],

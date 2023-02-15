@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:mfyp_cust/includes/api_key.dart';
+import 'package:mfyp_cust/includes/handlers/user.info.handler.provider.dart';
+import 'package:mfyp_cust/includes/models/location.direction.model.dart';
 import 'package:mfyp_cust/includes/plugins/request.url.plugins.dart';
 import 'package:mfyp_cust/includes/utilities/dialog.util.dart';
+import 'package:provider/provider.dart';
 
 import '../models/predicted_nearby_places.dart';
 
@@ -20,7 +23,21 @@ class MFYPListView extends StatelessWidget {
     String placeDetailsURL =
         "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeID&key=$apiKey";
     var urlRequest = await requestURL(placeDetailsURL);
-    if (urlRequest["status"] == "OK") {}
+    Navigator.of(context).pop();
+    if (urlRequest["status"] == "OK") {
+      LocationDirection userDirection = LocationDirection();
+
+      userDirection.locationName = urlRequest["result"]["name"];
+      userDirection.locationLat =
+          urlRequest["result"]["geometry"]["location"]["lat"];
+      userDirection.locationLat =
+          urlRequest["result"]["geometry"]["location"]["lng"];
+      userDirection.placeID = placeID;
+      print("The location name is " + userDirection.locationName!);
+      Provider.of<MFYPUserInfo>(context, listen: false)
+          .getServiceProviderPoint(userDirection);
+      Navigator.pop(context, "Home");
+    }
   }
 
   @override

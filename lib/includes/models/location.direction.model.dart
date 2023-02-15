@@ -1,11 +1,11 @@
 class LocationDirection {
-  String? formattedAddress, locationName, locationId;
+  String? formattedAddress, locationName, placeID;
   double? locationLat, locationLong;
 
   LocationDirection(
       {this.formattedAddress,
       this.locationName,
-      this.locationId,
+      this.placeID,
       this.locationLat,
       this.locationLong});
 }
