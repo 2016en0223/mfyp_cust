@@ -33,8 +33,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     zoom: 15,
   );
 
-  late Set<Marker> markerSet;
-  late Set<Circle> circleSet;
+  Set<Marker> markerSet = {};
+  Set<Circle> circleSet = {};
   List<LatLng> decodedLatLng = [];
   Set<Polyline> polylineSet = {};
   double googleMapPadding = 0;
@@ -55,7 +55,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       ),
     );
   }
-Future<DirectionDetails> drawRouteEncodedPoints(
+
+  Future<DirectionDetails> drawRouteEncodedPoints(
       LatLng userLatLng, LatLng techSPLatLng) async {
     String directionURL =
         "https://maps.googleapis.com/maps/api/directions/json?origin=${userLatLng.latitude},${userLatLng.longitude}&destination=${techSPLatLng.latitude},${techSPLatLng.longitude}&key=$apiKey";
@@ -104,6 +105,8 @@ Future<DirectionDetails> drawRouteEncodedPoints(
       zoomControlsEnabled: true,
       padding: EdgeInsets.only(bottom: googleMapPadding),
       polylines: polylineSet,
+      markers: markerSet,
+      circles: circleSet,
       onMapCreated: (GoogleMapController controller) {
         _mapControllerCompleter.complete(controller);
         newGMController = controller;
@@ -221,9 +224,10 @@ Future<DirectionDetails> drawRouteEncodedPoints(
   }
 
   Future drawPolylines() async {
-    var userPosition =
-        Provider.of<MFYPUserInfo>(context).userCurrentPointLocation;
-    var techPosition = Provider.of<MFYPUserInfo>(context).techSPLocation;
+    var userPosition = Provider.of<MFYPUserInfo>(context, listen: false)
+        .userCurrentPointLocation;
+    var techPosition =
+        Provider.of<MFYPUserInfo>(context, listen: false).techSPLocation;
 
     LatLng userLatLng =
         LatLng(userPosition!.locationLat!, userPosition.locationLong!);
@@ -272,5 +276,34 @@ Future<DirectionDetails> drawRouteEncodedPoints(
     } else {
       bounds = LatLngBounds(southwest: userLatLng, northeast: techSPLatLng);
     }
+    newGMController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 60));
+    Marker userMarker = Marker(
+      infoWindow: InfoWindow(
+          title: userPosition.locationName, snippet: "User Location"),
+      markerId: const MarkerId("user"),
+      position: userLatLng,
+    );
+    Marker techSPMarker = Marker(
+      infoWindow: InfoWindow(
+          title: techPosition.locationName, snippet: "Workshop Location"),
+      markerId: const MarkerId("provider"),
+      position: techSPLatLng,
+    );
+    setState(() {
+      markerSet.add(userMarker);
+      markerSet.add(techSPMarker);
+    });
+    Circle userCircle = Circle(
+      circleId: const CircleId("user"),
+      center: userLatLng,
+    );
+    Circle techSPCircle = Circle(
+      circleId: const CircleId("provider"),
+      center: techSPLatLng,
+    );
+    setState(() {
+      circleSet.add(userCircle);
+      circleSet.add(techSPCircle);
+    });
   }
 }
