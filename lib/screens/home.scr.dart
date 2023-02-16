@@ -7,6 +7,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mfyp_cust/includes/mixins/service.provider.mixin.dart';
 import 'package:mfyp_cust/includes/models/activeprovider.model.dart';
+import 'package:mfyp_cust/main.dart';
 import 'package:provider/provider.dart';
 import '../includes/api_key.dart';
 import '../includes/global.dart';
@@ -45,6 +46,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   Set<Polyline> polylineSet = {};
   double googleMapPadding = 0;
   bool activeProviderLoadedKey = false;
+  List<ActiveProviderModel> nearbyActiveSPList = [];
 //-----------------------------------End-----------------------------------------
 
   @override
@@ -198,7 +200,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                       ),
                     );
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  } else {}
+                  } else {
+                    saveRequestInfo();
+                  }
                 }),
           ],
         ),
@@ -401,6 +405,25 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         });
       }
     });
+  }
+
+  saveRequestInfo() {
+    nearbyActiveSPList = ActiveProvider.availableProvider;
+    getNearbySP() async {
+      if (nearbyActiveSPList.isEmpty) {
+        /*This reomves the service request*/
+        setState(() {
+          polylineSet.clear();
+          markerSet.clear();
+          circleSet.clear();
+          nearbyActiveSPList.clear();
+        });
+        //Using Snackbar display no provider available
+        Future.delayed(const Duration(seconds: 3), () {
+          MyApp.restartApp(context);
+        });
+      }
+    }
   }
 
 //-----------------------------------End-----------------------------------------

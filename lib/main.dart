@@ -1,35 +1,41 @@
 import 'package:flutter/material.dart';
-import 'package:mfyp_cust/screens/main.scr.dart';
 import 'package:provider/provider.dart';
 import 'includes/handlers/user.info.handler.provider.dart';
-import 'includes/utilities/colors.dart';
 
 void main() {
   runApp(ChangeNotifierProvider(
-      create: (context) => MFYPUserInfo(), child: const MyApp()));
+      create: (context) => MFYPUserInfo(), child: MyApp()));
 }
 
 class MyApp extends StatefulWidget {
-  const MyApp({super.key});
+  final Widget? child;
+
+  MyApp({this.child});
+
+  static void restartApp(BuildContext context) {
+    context.findAncestorStateOfType<_MyAppState>()!.restartApp();
+  }
 
   @override
-  State<MyApp> createState() => _MyAppState();
+  _MyAppState createState() => _MyAppState();
 }
 
 class _MyAppState extends State<MyApp> {
-  // This widget is the root of your application.
+  Key key = UniqueKey();
+
+  void restartApp() {
+    setState(() {
+      key = UniqueKey();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          elevation: 0,
-          toolbarHeight: 0,
-          backgroundColor: AppColor.primaryColor,
-        ),
-        body: const MFYPMainScreen(),
-      ),
+    return KeyedSubtree(
+      key: key,
+      child: widget.child!,
     );
   }
 }
+
+
