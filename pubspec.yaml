@@ -47,6 +47,7 @@ dependencies:
   flutter_polyline_points: ^1.0.0
   firebase_database: ^10.0.6
   geolocator: ^9.0.2
+  flutter_geofire: ^2.0.3
 
 dev_dependencies:
   flutter_test:
