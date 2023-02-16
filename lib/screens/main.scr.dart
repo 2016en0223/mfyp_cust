@@ -1,9 +1,10 @@
+//---------------------------------Dependencies---------------------------------
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mfyp_cust/screens/history.scr.dart';
-
 import 'account.scr.dart';
 import 'home.scr.dart';
+//-------------------------------------End--------------------------------------
 
 class MFYPMainScreen extends StatefulWidget {
   const MFYPMainScreen({Key? key}) : super(key: key);

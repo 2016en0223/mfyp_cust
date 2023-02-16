@@ -1,9 +1,12 @@
 //------------------------------Dependencies------------------------------------
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mfyp_cust/includes/mixins/service.provider.mixin.dart';
+import 'package:mfyp_cust/includes/models/activeprovider.model.dart';
 import 'package:provider/provider.dart';
 import '../includes/api_key.dart';
 import '../includes/global.dart';
@@ -17,6 +20,7 @@ import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import 'main.scr.dart';
 import 'search.scr.dart';
+
 //----------------------------------End-----------------------------------------
 class MFYPHomeScreen extends StatefulWidget {
   const MFYPHomeScreen({super.key});
@@ -37,11 +41,10 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 //--------------------------------Variables--------------------------------------
   var geolocator = Geolocator;
   LocationPermission? userLocationPermission;
-  Set<Marker> markerSet = {};
-  Set<Circle> circleSet = {};
   List<LatLng> decodedLatLng = [];
   Set<Polyline> polylineSet = {};
   double googleMapPadding = 0;
+  bool activeProviderLoadedKey = false;
 //-----------------------------------End-----------------------------------------
 
   @override
@@ -61,7 +64,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       ),
     );
   }
-  
+
 //-------------------------------User Interface---------------------------------
   googleMap() => GoogleMap(
       initialCameraPosition: _initialCamera,
@@ -183,7 +186,20 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                 color: AppColor.primaryColor,
               ),
             ),
-            MFYPButton(text: "Request", onPressed: () {}),
+            MFYPButton(
+                text: "Request",
+                onPressed: () {
+                  if (Provider.of<MFYPUserInfo>(context, listen: false)
+                          .techSPLocation ==
+                      null) {
+                    SnackBar snackBar = const SnackBar(
+                      content: Text(
+                        "Select the nearest provider to proceed!",
+                      ),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  } else {}
+                }),
           ],
         ),
       ),
@@ -207,6 +223,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         await UserMixin.userReverseGeocoding(userCurrentPosition!, context);
 
     print("Is this even working at all?  $test");
+    activeSPListener();
   }
 
   Future<DirectionDetails> drawRouteEncodedPoints(
@@ -312,5 +329,79 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       circleSet.add(techSPCircle);
     });
   }
+
+  activeSPListener() {
+    Geofire.initialize("activeProvider");
+    Geofire.queryAtLocation(
+            userCurrentPosition!.latitude, userCurrentPosition!.longitude, 1)!
+        .listen((map) {
+      print(map);
+      if (map != null) {
+        var callBack = map['callBack'];
+
+        //latitude will be retrieved from map['latitude']
+        //longitude will be retrieved from map['longitude']
+
+        switch (callBack) {
+          case Geofire.onKeyEntered:
+            ActiveProviderModel activeTechSP = ActiveProviderModel();
+            activeTechSP.providerID = map["key"];
+            activeTechSP.locationLat = map["latitude"];
+            activeTechSP.locationLong = map["longitude"];
+            ActiveProvider.availableProvider.add(activeTechSP);
+            if (activeProviderLoadedKey == true) {
+              displayActiveProvider();
+            }
+            break;
+
+          case Geofire.onKeyExited:
+            ActiveProvider.removeProvider(map["key"]);
+            break;
+
+          case Geofire.onKeyMoved:
+            // Update your key's location
+            ActiveProviderModel activeTechSP = ActiveProviderModel();
+            activeTechSP.providerID = map["key"];
+            activeTechSP.locationLat = map["latitude"];
+            activeTechSP.locationLong = map["longitude"];
+            ActiveProvider.availableProvider.add(activeTechSP);
+            ActiveProvider.updateProviderPoint(activeTechSP);
+            displayActiveProvider();
+            break;
+
+          case Geofire.onGeoQueryReady:
+            activeProviderLoadedKey = true;
+            displayActiveProvider();
+            break;
+        }
+      }
+
+      setState(() {});
+    });
+  }
+
+  displayActiveProvider() {
+    setState(() {
+      markerSet.clear();
+      circleSet.clear();
+
+      Set<Marker> providerSet = <Marker>{};
+
+      for (ActiveProviderModel provider in ActiveProvider.availableProvider) {
+        LatLng providerPosition =
+            LatLng(provider.locationLat!, provider.locationLong!);
+        Marker providerMarker = Marker(
+          markerId: const MarkerId("providerMarker"),
+          position: providerPosition,
+          rotation: 360,
+        );
+        providerSet.add(providerMarker);
+        setState(() {
+          markerSet = providerSet;
+        });
+      }
+    });
+  }
+
 //-----------------------------------End-----------------------------------------
 }
