@@ -11,3 +11,4 @@ FirebaseAuth? firebaseAuth;
 Position? userCurrentPosition;
 Set<Marker> markerSet = {};
 Set<Circle> circleSet = {};
+List providerKeyList = [];

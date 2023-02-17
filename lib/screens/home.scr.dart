@@ -1,5 +1,6 @@
 //------------------------------Dependencies------------------------------------
 import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
@@ -423,6 +424,20 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
           MyApp.restartApp(context);
         });
       }
+      await retrieveProvider(nearbyActiveSPList);
+    }
+  }
+
+  DatabaseReference ref = FirebaseDatabase.instance.ref().child("provider");
+  retrieveProvider(List nearby) async {
+    for (int i = 0; nearby.length > 0; i++) {
+      await ref
+          .child(nearbyActiveSPList[i].providerID.toString())
+          .once()
+          .then((data) {
+        var providerID = data.snapshot.value;
+        providerKeyList.add(providerID);
+      });
     }
   }
 
