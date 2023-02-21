@@ -25,7 +25,7 @@ class MFYPTextField extends StatelessWidget {
     Key? key,
     required this.controller,
     required this.keyboardType,
-    required this.obscureText,
+    this.obscureText = false,
     this.labelText,
     this.hintText,
     this.contentPadding = const EdgeInsets.symmetric(
@@ -89,6 +89,63 @@ class MFYPTextField extends StatelessWidget {
           color: AppColor.textFieldColor,
           fontSize: 15,
         ),
+      ),
+    );
+  }
+}
+
+class TextFieldCustom extends StatelessWidget {
+  final Function(String?)? onChanged;
+  final TextEditingController? controller;
+  final bool obscureText;
+  final String? hintText, labelText;
+  final Widget? prefixIcon, suffixIcon;
+  final TextInputType? keyboardType;
+  final TextStyle? style;
+  const TextFieldCustom(
+      {super.key,
+      this.controller,
+      this.obscureText = false,
+      this.hintText,
+      this.labelText,
+      this.prefixIcon,
+      this.suffixIcon,
+      this.keyboardType,
+      this.style,
+      this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      onChanged: onChanged,
+      controller: controller,
+      keyboardType: keyboardType,
+      autofocus: false,
+      obscureText: obscureText,
+      style: style,
+      decoration: InputDecoration(
+        hintText: hintText,
+        labelText: labelText,
+        labelStyle: const TextStyle(
+          color: Colors.grey,
+          fontSize: 14,
+        ),
+        prefixIcon: prefixIcon,
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+        enabledBorder: OutlineInputBorder(
+          borderSide:
+              const BorderSide(color: AppColor.textFieldColor, width: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderSide: const BorderSide(color: AppColor.primaryColor, width: 1),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        fillColor: AppColor.primarySoft,
+        filled: true,
+        //
+        suffixIcon: suffixIcon,
       ),
     );
   }

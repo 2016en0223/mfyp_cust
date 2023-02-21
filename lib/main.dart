@@ -1,10 +1,31 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:mfyp_cust/screens/register.scr.dart';
 import 'package:provider/provider.dart';
+import 'firebase_option.dart';
 import 'includes/handlers/user.info.handler.provider.dart';
 
-void main() {
-  runApp(ChangeNotifierProvider(
-      create: (context) => MFYPUserInfo(), child: MyApp()));
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  runApp(
+    MyApp(
+      child: ChangeNotifierProvider(
+        create: (context) => MFYPUserInfo(),
+        child: MaterialApp(
+          title: 'Drivers App',
+          theme: ThemeData(
+            primarySwatch: Colors.blue,
+          ),
+          home: MFYPSignUpScreen(),
+          debugShowCheckedModeBanner: false,
+        ),
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {

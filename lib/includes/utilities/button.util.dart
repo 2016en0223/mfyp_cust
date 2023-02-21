@@ -13,6 +13,8 @@ class MFYPButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 12),
+        foregroundColor: AppColor.primary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(10),
         ),
@@ -20,17 +22,16 @@ class MFYPButton extends StatelessWidget {
           width,
         ),
         backgroundColor: AppColor.primaryColor,
+        shadowColor: Colors.transparent,
+        
         elevation: 0,
       ),
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Text(
-          text,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -54,3 +55,4 @@ class MFYPTextButton extends StatelessWidget {
     );
   }
 }
+

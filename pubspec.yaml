@@ -40,7 +40,7 @@ dependencies:
   http: ^0.13.5
   provider: ^6.0.4
   firebase_auth: ^4.1.4
-  firebase_core: ^2.3.0
+  firebase_core: ^2.6.1
   firebase_messaging: ^14.1.2
   cloud_firestore: ^4.1.0
   google_maps_flutter: ^2.2.3
@@ -48,6 +48,12 @@ dependencies:
   firebase_database: ^10.0.6
   geolocator: ^9.0.2
   flutter_geofire: ^2.0.3
+  smooth_star_rating_null_safety: ^1.0.4+2
+  flutter_svg: ^2.0.1
+  # pecahan_rupiah: ^0.0.1
+  smooth_page_indicator: ^1.0.0+2
+  smooth_star_rating: ^1.1.1
+  pin_code_fields: ^7.3.0
 
 dev_dependencies:
   flutter_test:

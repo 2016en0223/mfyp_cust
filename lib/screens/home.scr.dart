@@ -6,20 +6,21 @@ import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:mfyp_cust/includes/mixins/service.provider.mixin.dart';
-import 'package:mfyp_cust/includes/models/activeprovider.model.dart';
-import 'package:mfyp_cust/main.dart';
 import 'package:provider/provider.dart';
 import '../includes/api_key.dart';
 import '../includes/global.dart';
 import '../includes/handlers/user.info.handler.provider.dart';
+import '../includes/mixins/service.provider.mixin.dart';
 import '../includes/mixins/user.reversegeo.mixin.dart';
+import '../includes/models/activeprovider.model.dart';
 import '../includes/models/direction.details.model.dart';
 import '../includes/plugins/polyline.plugin.dart';
 import '../includes/plugins/request.url.plugins.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
+import '../main.dart';
+import 'active.provider.dart';
 import 'main.scr.dart';
 import 'search.scr.dart';
 
@@ -48,6 +49,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   double googleMapPadding = 0;
   bool activeProviderLoadedKey = false;
   List<ActiveProviderModel> nearbyActiveSPList = [];
+  BitmapDescriptor? activeNearbyIcon;
 //-----------------------------------End-----------------------------------------
 
   @override
@@ -336,7 +338,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   }
 
   activeSPListener() {
-    Geofire.initialize("activeProvider");
+    Geofire.initialize("activeProviders");
     Geofire.queryAtLocation(
             userCurrentPosition!.latitude, userCurrentPosition!.longitude, 1)!
         .listen((map) {
@@ -349,11 +351,12 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
         switch (callBack) {
           case Geofire.onKeyEntered:
-            ActiveProviderModel activeTechSP = ActiveProviderModel();
-            activeTechSP.providerID = map["key"];
-            activeTechSP.locationLat = map["latitude"];
-            activeTechSP.locationLong = map["longitude"];
-            ActiveProvider.availableProvider.add(activeTechSP);
+            //This check whenever there is any active provider it will be added to the list
+            ActiveProviderModel activeProvider = ActiveProviderModel();
+            activeProvider.providerID = map["key"];
+            activeProvider.locationLat = map["latitude"];
+            activeProvider.locationLong = map["longitude"];
+            ActiveProvider.availableProvider.add(activeProvider);
             if (activeProviderLoadedKey == true) {
               displayActiveProvider();
             }
@@ -364,17 +367,18 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             break;
 
           case Geofire.onKeyMoved:
-            // Update your key's location
-            ActiveProviderModel activeTechSP = ActiveProviderModel();
-            activeTechSP.providerID = map["key"];
-            activeTechSP.locationLat = map["latitude"];
-            activeTechSP.locationLong = map["longitude"];
-            ActiveProvider.availableProvider.add(activeTechSP);
-            ActiveProvider.updateProviderPoint(activeTechSP);
+            /* This check for any available provider and when the location is changed this is triggered */
+            ActiveProviderModel activeProvider = ActiveProviderModel();
+            activeProvider.providerID = map["key"];
+            activeProvider.locationLat = map["latitude"];
+            activeProvider.locationLong = map["longitude"];
+            ActiveProvider.availableProvider.add(activeProvider);
+            ActiveProvider.updateProviderPoint(activeProvider);
             displayActiveProvider();
             break;
 
           case Geofire.onGeoQueryReady:
+            /* This is used to display active provider to the user */
             activeProviderLoadedKey = true;
             displayActiveProvider();
             break;
@@ -396,7 +400,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         LatLng providerPosition =
             LatLng(provider.locationLat!, provider.locationLong!);
         Marker providerMarker = Marker(
-          markerId: const MarkerId("providerMarker"),
+          icon: BitmapDescriptor.defaultMarker,
+          markerId: MarkerId(provider.providerID!),
           position: providerPosition,
           rotation: 360,
         );
@@ -425,19 +430,32 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         });
       }
       await retrieveProvider(nearbyActiveSPList);
+      Navigator.of(context).push(MaterialPageRoute(
+          builder: ((context) => const MFYPActiveProvider())));
     }
   }
 
   DatabaseReference ref = FirebaseDatabase.instance.ref().child("provider");
   retrieveProvider(List nearby) async {
-    for (int i = 0; nearby.length > 0; i++) {
+    for (int i = 0; nearby.isNotEmpty; i++) {
       await ref
           .child(nearbyActiveSPList[i].providerID.toString())
           .once()
           .then((data) {
         var providerID = data.snapshot.value;
         providerKeyList.add(providerID);
+        /* Displaying service provider information on new screen */
       });
+    }
+  }
+
+  addProviderIcon() {
+    if (activeNearbyIcon == null) {
+      ImageConfiguration imgConfig =
+          createLocalImageConfiguration(context, size: const Size(2, 2));
+      BitmapDescriptor.fromAssetImage(imgConfig, "assetName.png")
+          .then((value) => {activeNearbyIcon = value
+          });
     }
   }
 
