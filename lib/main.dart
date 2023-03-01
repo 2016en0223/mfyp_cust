@@ -1,15 +1,24 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:mfyp_cust/includes/utilities/colors.dart';
 import 'package:mfyp_cust/screens/register.scr.dart';
 import 'package:provider/provider.dart';
 import 'firebase_option.dart';
 import 'includes/handlers/user.info.handler.provider.dart';
+import 'screens/welcome.scr.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: AppColor.primaryColor,
+    //color set to transperent or set your own color
+    statusBarIconBrightness: Brightness.light,
+    //set brightness for icons, like dark background light icons
+  ));
 
   runApp(
     MyApp(
@@ -18,9 +27,10 @@ void main() async {
         child: MaterialApp(
           title: 'Drivers App',
           theme: ThemeData(
-            primarySwatch: Colors.blue,
+            primarySwatch: Colors.cyan,
+            fontFamily: "SanFrancisco",
           ),
-          home: MFYPSignUpScreen(),
+          home: const MFYPWelcomePage(),
           debugShowCheckedModeBanner: false,
         ),
       ),
@@ -58,5 +68,3 @@ class _MyAppState extends State<MyApp> {
     );
   }
 }
-
-

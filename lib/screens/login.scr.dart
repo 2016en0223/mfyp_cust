@@ -1,11 +1,15 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:mfyp_cust/includes/utilities/dialog.util.dart';
 import '../includes/global.dart';
+import '../includes/models/user.model.inc.dart';
 import '../includes/utilities/colors.dart';
+import '../includes/utilities/dialog.util.dart';
 import '../includes/utilities/textfield.util.dart';
+import 'home.scr.dart';
 import 'register.scr.dart';
 
 class MFYPLogin extends StatefulWidget {
@@ -18,6 +22,8 @@ class MFYPLogin extends StatefulWidget {
 class MFYPLoginState extends State<MFYPLogin> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +80,7 @@ class MFYPLoginState extends State<MFYPLogin> {
           // Section 2 - Form
           // Email
           TextFieldCustom(
-            // controller: emailController,
+            controller: emailController,
             keyboardType: TextInputType.emailAddress,
             hintText: 'Email Address',
             prefixIcon: Container(
@@ -88,7 +94,7 @@ class MFYPLoginState extends State<MFYPLogin> {
           const SizedBox(height: 25),
           // Password
           TextFieldCustom(
-            // controller: passwordController,
+            controller: passwordController,
             obscureText: true,
             hintText: 'Password',
             prefixIcon: Container(
@@ -130,19 +136,26 @@ class MFYPLoginState extends State<MFYPLogin> {
 
   validate() {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      const snackBar = SnackBar(content: Text("A valid email is required"));
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
-    } else if (emailController.text.isNotEmpty ||
-        passwordController.text.isEmpty) {
-      const snackBar = SnackBar(content: Text("Password is invalid"));
-      ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      snackBarMessage("A valid credential is required.", context);
+    } else if (passwordController.text.isEmpty) {
+      snackBarMessage("Password is invalid", context);
     } else if (emailController.text.contains(regex) &&
         passwordController.text.isNotEmpty) {
-      driverLogin();
+      providerLogin();
+    } else {
+      snackBarMessage("Bad format!", context);
     }
   }
 
-  driverLogin() async {
+  providerLogin() async {
+    showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext c) {
+          return const MFYPDialog(
+            message: "Logging in...",
+          );
+        });
     try {
       final User? credential =
           (await FirebaseAuth.instance.signInWithEmailAndPassword(
@@ -151,24 +164,28 @@ class MFYPLoginState extends State<MFYPLogin> {
       ))
               .user;
       if (credential != null) {
-        currentFirebaseUser = credential;
+        currentFirebaseUser = fAuth.currentUser;
         DatabaseReference databaseReference = FirebaseDatabase.instance
             .ref()
             .child("users")
             .child(currentFirebaseUser!.uid);
         databaseReference.once().then((data) {
           if (data.snapshot.value != null) {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => const MFYPSignUpScreen()));
-            print("The user is logged in!");
+            UserModel.readUserInfo();
           }
+          Future.delayed(
+              const Duration(seconds: 3),
+              () => Navigator.of(context).pushReplacement(MaterialPageRoute(
+                  builder: (context) => const MFYPHomeScreen())));
         });
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        print('No user found for that email.');
+        Navigator.of(context).pop();
+        snackBarMessage("No user found for that email.", context);
       } else if (e.code == 'wrong-password') {
-        print('Wrong password provided for that user.');
+        Navigator.of(context).pop();
+        snackBarMessage("Wrong password provided for that user.", context);
       }
     } catch (e) {
       fAuth.signOut;

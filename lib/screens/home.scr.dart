@@ -1,7 +1,10 @@
 //------------------------------Dependencies------------------------------------
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
@@ -14,6 +17,7 @@ import '../includes/mixins/service.provider.mixin.dart';
 import '../includes/mixins/user.reversegeo.mixin.dart';
 import '../includes/models/activeprovider.model.dart';
 import '../includes/models/direction.details.model.dart';
+import '../includes/models/user.model.inc.dart';
 import '../includes/plugins/polyline.plugin.dart';
 import '../includes/plugins/request.url.plugins.dart';
 import '../includes/utilities/button.util.dart';
@@ -21,6 +25,7 @@ import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import '../main.dart';
 import 'active.provider.dart';
+import 'login.scr.dart';
 import 'main.scr.dart';
 import 'search.scr.dart';
 
@@ -55,12 +60,19 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   @override
   void initState() {
     super.initState();
+    initLogin();
     deviceLocationPermission();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        toolbarHeight: 0,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+      ),
       body: Stack(
         children: [
           googleMap(),
@@ -86,7 +98,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         _mapControllerCompleter.complete(controller);
         newGMController = controller;
         setState(() {
-          googleMapPadding = 150;
+          googleMapPadding = 170;
         });
         getUserCurrentLocation();
       });
@@ -199,7 +211,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                       null) {
                     SnackBar snackBar = const SnackBar(
                       content: Text(
-                        "Select the nearest provider to proceed!",
+                        "Select the nearest provider to proceed.",
                       ),
                     );
                     ScaffoldMessenger.of(context).showSnackBar(snackBar);
@@ -216,6 +228,16 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
 //---------------------------------Logics---------------------------------------
 
+  initLogin() {
+    fAuth.currentUser != null ? UserModel.readUserInfo() : null;
+    Timer(const Duration(seconds: 3), () {
+      if (fAuth.currentUser == null) {
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (ctx) => const MFYPLogin()));
+      }
+    });
+  }
+
   getUserCurrentLocation() async {
     userCurrentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
@@ -228,8 +250,6 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
     String test =
         await UserMixin.userReverseGeocoding(userCurrentPosition!, context);
-
-    print("Is this even working at all?  $test");
     activeSPListener();
   }
 
@@ -342,12 +362,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     Geofire.queryAtLocation(
             userCurrentPosition!.latitude, userCurrentPosition!.longitude, 1)!
         .listen((map) {
-      print(map);
       if (map != null) {
         var callBack = map['callBack'];
-
-        //latitude will be retrieved from map['latitude']
-        //longitude will be retrieved from map['longitude']
 
         switch (callBack) {
           case Geofire.onKeyEntered:
@@ -415,24 +431,30 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
   saveRequestInfo() {
     nearbyActiveSPList = ActiveProvider.availableProvider;
-    getNearbySP() async {
-      if (nearbyActiveSPList.isEmpty) {
-        /*This reomves the service request*/
-        setState(() {
-          polylineSet.clear();
-          markerSet.clear();
-          circleSet.clear();
-          nearbyActiveSPList.clear();
-        });
-        //Using Snackbar display no provider available
-        Future.delayed(const Duration(seconds: 3), () {
-          MyApp.restartApp(context);
-        });
-      }
-      await retrieveProvider(nearbyActiveSPList);
-      Navigator.of(context).push(MaterialPageRoute(
-          builder: ((context) => const MFYPActiveProvider())));
+    getNearbySP();
+  }
+
+  getNearbySP() async {
+    if (nearbyActiveSPList.isEmpty) {
+      /*This reomves the service request*/
+      setState(() {
+        polylineSet.clear();
+        markerSet.clear();
+        circleSet.clear();
+        nearbyActiveSPList.clear();
+      });
+
+      snackBarMessage("No provider available at the moment.", context);
+      //Using Snackbar display no provider available
+      Future.delayed(const Duration(seconds: 3), () {
+        MyApp.restartApp(context);
+      });
+
+      return;
     }
+    await retrieveProvider(nearbyActiveSPList);
+    Navigator.of(context).push(
+        MaterialPageRoute(builder: ((context) => const MFYPActiveProvider())));
   }
 
   DatabaseReference ref = FirebaseDatabase.instance.ref().child("provider");
@@ -454,8 +476,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       ImageConfiguration imgConfig =
           createLocalImageConfiguration(context, size: const Size(2, 2));
       BitmapDescriptor.fromAssetImage(imgConfig, "assetName.png")
-          .then((value) => {activeNearbyIcon = value
-          });
+          .then((value) => {activeNearbyIcon = value});
     }
   }
 

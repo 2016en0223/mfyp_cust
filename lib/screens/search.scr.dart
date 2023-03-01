@@ -24,8 +24,7 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
     if (nearby.isNotEmpty) {
       String placeURL =
           "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${userCurrentPosition!.latitude}%2C${userCurrentPosition!.longitude}&radius=1000&type=car_repair&keyword=$nearby&components=country:NG&key=$apiKey&strict_bound=true";
-      // String placeURL =
-      // "https://maps.googleapis.com/maps/api/place/autocomplete/json?input=auto&types=car_repair&location=${userCurrentPosition!.latitude}%2C${userCurrentPosition!.longitude}&radius=1500&components=country:NG&key=AIzaSyDX7qXPgTueXavLxcLp8VN9M89XnGdmo_U";
+      
       var urlRequest = await requestURL(placeURL);
 
       if (urlRequest["status"] == "OK") {
@@ -131,4 +130,5 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
       ),
     );
   }
+  
 }
