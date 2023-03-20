@@ -2,6 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:mfyp_cust/includes/utilities/colors.dart';
+import 'package:mfyp_cust/screens/active.provider.dart';
+import 'package:mfyp_cust/screens/main.scr.dart';
 import 'package:mfyp_cust/screens/register.scr.dart';
 import 'package:provider/provider.dart';
 import 'firebase_option.dart';
@@ -30,7 +32,7 @@ void main() async {
             primarySwatch: Colors.cyan,
             fontFamily: "SanFrancisco",
           ),
-          home: const MFYPWelcomePage(),
+          home: const MFYPMainScreen(),
           debugShowCheckedModeBanner: false,
         ),
       ),

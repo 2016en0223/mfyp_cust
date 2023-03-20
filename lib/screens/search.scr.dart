@@ -3,7 +3,7 @@ import 'package:mfyp_cust/includes/api_key.dart';
 import 'package:mfyp_cust/includes/models/predicted_nearby_places.dart';
 import 'package:mfyp_cust/includes/utilities/listview.util.dart';
 import '../includes/global.dart';
-import '../includes/plugins/request.url.plugins.dart';
+import '../includes/assistants/requests.dart';
 import '../includes/utilities/colors.dart';
 import 'home.scr.dart';
 
@@ -25,7 +25,7 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
       String placeURL =
           "https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${userCurrentPosition!.latitude}%2C${userCurrentPosition!.longitude}&radius=1000&type=car_repair&keyword=$nearby&components=country:NG&key=$apiKey&strict_bound=true";
       
-      var urlRequest = await requestURL(placeURL);
+      var urlRequest = await Request.requestURL(placeURL);
 
       if (urlRequest["status"] == "OK") {
         var nearbyPlaces = urlRequest["results"];
@@ -112,8 +112,9 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
               ],
             ),
           ),
-          predictedNearby.isNotEmpty
-              ? Expanded(
+          predictedNearby.isEmpty
+              ? Container()
+              : Expanded(
                   child: ListView.separated(
                       physics: const ClampingScrollPhysics(),
                       itemBuilder: (context, index) => MFYPListView(
@@ -125,7 +126,7 @@ class _MFYPSearchScreenState extends State<MFYPSearchScreen> {
                             height: 1,
                           ),
                       itemCount: predictedNearby.length))
-              : Container(),
+              ,
         ],
       ),
     );

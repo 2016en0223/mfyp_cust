@@ -3,10 +3,10 @@ import 'package:provider/provider.dart';
 import '../api_key.dart';
 import '../handlers/user.info.handler.provider.dart';
 import '../models/location.direction.model.dart';
-import '../plugins/request.url.plugins.dart';
+import '../assistants/requests.dart';
 
-class UserMixin {
-  static Future<String> userReverseGeocoding(
+class Geocoding {
+  static Future<String> reverseGeocoding(
       Position userCurrentPosition, context) async {
     String formattedAddress = "";
 
@@ -14,7 +14,7 @@ class UserMixin {
     String urlGeocoding =
         "https://maps.googleapis.com/maps/api/geocode/json?latlng=${userCurrentPosition.latitude},${userCurrentPosition.longitude}&key=$apiKey";
 
-    var urlRequest = await requestURL(urlGeocoding);
+    var urlRequest = await Request.requestURL(urlGeocoding);
 
     if (urlRequest["status"] == "OK") {
       //The result in JSON format is fed to the location model

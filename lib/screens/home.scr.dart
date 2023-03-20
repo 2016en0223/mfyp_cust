@@ -9,17 +9,17 @@ import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:mfyp_cust/includes/mixins/reverse.geocoding.mixin.dart';
 import 'package:provider/provider.dart';
 import '../includes/api_key.dart';
 import '../includes/global.dart';
 import '../includes/handlers/user.info.handler.provider.dart';
 import '../includes/mixins/service.provider.mixin.dart';
-import '../includes/mixins/user.reversegeo.mixin.dart';
 import '../includes/models/activeprovider.model.dart';
 import '../includes/models/direction.details.model.dart';
 import '../includes/models/user.model.inc.dart';
-import '../includes/plugins/polyline.plugin.dart';
-import '../includes/plugins/request.url.plugins.dart';
+import '../includes/assistants/get.encoded.points.assistant.dart';
+import '../includes/assistants/requests.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
@@ -209,12 +209,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                   if (Provider.of<MFYPUserInfo>(context, listen: false)
                           .techSPLocation ==
                       null) {
-                    SnackBar snackBar = const SnackBar(
-                      content: Text(
-                        "Select the nearest provider to proceed.",
-                      ),
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                    snackBarMessage(
+                        "Select the nearest provider to proceed.", context);
                   } else {
                     saveRequestInfo();
                   }
@@ -248,29 +244,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     newGMController!
         .animateCamera(CameraUpdate.newCameraPosition(userCurrentLocationCam));
 
-    String test =
-        await UserMixin.userReverseGeocoding(userCurrentPosition!, context);
-    activeSPListener();
-  }
-
-  Future<DirectionDetails> drawRouteEncodedPoints(
-      LatLng userLatLng, LatLng techSPLatLng) async {
-    String directionURL =
-        "https://maps.googleapis.com/maps/api/directions/json?origin=${userLatLng.latitude},${userLatLng.longitude}&destination=${techSPLatLng.latitude},${techSPLatLng.longitude}&key=$apiKey";
-    var urlRequest = await requestURL(directionURL);
-
-    DirectionDetails directionInfo = DirectionDetails();
-    directionInfo.distanceText =
-        urlRequest["routes"][0]["legs"]["distance"]["text"];
-    directionInfo.distanceValue =
-        urlRequest["routes"][0]["legs"]["distance"]["value"];
-    directionInfo.durationText =
-        urlRequest["routes"][0]["legs"]["duration"]["text"];
-    directionInfo.durationValue =
-        urlRequest["routes"][0]["legs"]["duration"]["value"];
-    directionInfo.polylinePoints =
-        urlRequest["routes"][0]["overview_polyline"]["points"];
-    return directionInfo;
+    await Geocoding.reverseGeocoding(userCurrentPosition!, context);
+    geofireListener();
   }
 
   Future drawPolylines() async {
@@ -287,18 +262,22 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         context: context,
         builder: (BuildContext context) =>
             const MFYPDialog(message: "Please wait..."));
-    var getEncodedPoint = await getEncodedPoints(userLatLng, techSPLatLng);
+    var getEncodedPoint =
+        await getEncodedPointsFromProviderToUser(userLatLng, techSPLatLng);
     Navigator.of(context).pop();
 
     PolylinePoints points = PolylinePoints();
     List<PointLatLng> decodedpoints =
         points.decodePolyline(getEncodedPoint!.polylinePoints!);
+    decodedLatLng.clear();
     if (decodedpoints.isNotEmpty) {
       for (var point in decodedpoints) {
-        decodedLatLng.add(LatLng(point.latitude, point.longitude));
+        LatLng points = LatLng(point.latitude, point.longitude);
+        decodedLatLng.add(points);
       }
     }
     polylineSet.clear();
+
     setState(() {
       Polyline drawLine = Polyline(
           polylineId: const PolylineId("1"),
@@ -326,7 +305,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     } else {
       bounds = LatLngBounds(southwest: userLatLng, northeast: techSPLatLng);
     }
-    newGMController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 60));
+    newGMController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
     Marker userMarker = Marker(
       infoWindow: InfoWindow(
           title: userPosition.locationName, snippet: "User Location"),
@@ -357,10 +336,10 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     });
   }
 
-  activeSPListener() {
+  geofireListener() {
     Geofire.initialize("activeProviders");
     Geofire.queryAtLocation(
-            userCurrentPosition!.latitude, userCurrentPosition!.longitude, 1)!
+            userCurrentPosition!.latitude, userCurrentPosition!.longitude, 10)!
         .listen((map) {
       if (map != null) {
         var callBack = map['callBack'];
@@ -373,8 +352,10 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             activeProvider.locationLat = map["latitude"];
             activeProvider.locationLong = map["longitude"];
             ActiveProvider.availableProvider.add(activeProvider);
+            print("Hello");
+
             if (activeProviderLoadedKey == true) {
-              displayActiveProvider();
+              displayActiveProviderMarker();
             }
             break;
 
@@ -390,22 +371,26 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             activeProvider.locationLong = map["longitude"];
             ActiveProvider.availableProvider.add(activeProvider);
             ActiveProvider.updateProviderPoint(activeProvider);
-            displayActiveProvider();
+            displayActiveProviderMarker();
             break;
 
           case Geofire.onGeoQueryReady:
             /* This is used to display active provider to the user */
-            activeProviderLoadedKey = true;
-            displayActiveProvider();
+            setState(() {
+              activeProviderLoadedKey = true;
+            });
+
+            displayActiveProviderMarker();
             break;
         }
       }
-
-      setState(() {});
     });
   }
 
-  displayActiveProvider() {
+  displayActiveProviderMarker() async {
+    UserModel? currentUserModelLocal;
+    DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
+    /* This snippet helps to display the nearby provider with marker */
     setState(() {
       markerSet.clear();
       circleSet.clear();
@@ -415,28 +400,109 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       for (ActiveProviderModel provider in ActiveProvider.availableProvider) {
         LatLng providerPosition =
             LatLng(provider.locationLat!, provider.locationLong!);
-        Marker providerMarker = Marker(
-          icon: BitmapDescriptor.defaultMarker,
-          markerId: MarkerId(provider.providerID!),
-          position: providerPosition,
-          rotation: 360,
-        );
-        providerSet.add(providerMarker);
-        setState(() {
-          markerSet = providerSet;
+        
+        
+        ref.child(provider.providerID!).once().then((snappedValue) {
+          if (snappedValue.snapshot.value != null) {
+            var providerID = snappedValue.snapshot.value;
+            providerKeyList.add(providerID);
+            currentUserModelLocal =
+                UserModel.fromSnapshot(snappedValue.snapshot);
+            Provider.of<MFYPUserInfo>(context, listen: false)
+                .getProviderDetails(currentUserModelLocal!);
+          }
+        });
+        Future.delayed(const Duration(seconds: 2), () {
+          Marker providerMarker = Marker(
+            icon: BitmapDescriptor.defaultMarker,
+            markerId: MarkerId(provider.providerID!),
+            position: providerPosition,
+            rotation: 360,
+            infoWindow: InfoWindow(
+              title: context.read<MFYPUserInfo>().activeProvider != null
+                  ? context.read<MFYPUserInfo>().activeProvider!.fullName
+                  : currentUserModelLocal!.fullName,
+              snippet: context.read<MFYPUserInfo>().activeProvider != null
+                  ? context.read<MFYPUserInfo>().activeProvider!.phone
+                  : "Hello",
+              onTap: () => showDialog(
+                context: context,
+                builder: (context) => MFYPDialogAction(
+                  title:
+                      "${context.read<MFYPUserInfo>().activeProvider!.fullName}'s Information",
+                  content: Column(
+                    children: [
+                      Text(
+                        context.read<MFYPUserInfo>().activeProvider!.fullName!,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                      const SizedBox(height: 15),
+                      Text(
+                        currentUserModelLocal!.phone!,
+                      ),
+                      const SizedBox(height: 15),
+                      const Text(
+                        "Provider Categories",
+                        style: TextStyle(fontSize: 12),
+                      ),
+                    ],
+                  ),
+                  actions: [
+                    MFYPTextButton(
+                      text: "Cancel",
+                      onPressed: () => Navigator.of(context).pop(),
+                    ),
+                    ElevatedButton(onPressed: () => null, child: Text("Hello"))
+                  ],
+                ),
+              ),
+            ),
+          );
+          providerSet.add(providerMarker);
+          setState(() {
+            markerSet = providerSet;
+          });
         });
       }
     });
   }
 
   saveRequestInfo() {
+    /* This function save the request made by the user and accepted by the provider and this is served to the Firebase */
+    prequest = FirebaseDatabase.instance.ref().child("Requests").push();
+    var userLocation = context.read<MFYPUserInfo>().userCurrentPointLocation;
+    var providerLocation = context.read<MFYPUserInfo>().techSPLocation;
+
+    Map userLocationMap = {
+      "latitude": userLocation!.locationLat.toString(),
+      "longitude": userLocation.locationLong.toString()
+    };
+
+    Map providerLocationMap = {
+      "latitude": providerLocation!.locationLat.toString(),
+      "longitude": providerLocation.locationLong.toString(),
+    };
+
+    Map locationMap = {
+      "destination": userLocationMap,
+      "origin": providerLocationMap,
+      "time": DateTime.now().toString(),
+      "fullName": currentUserModel!.fullName,
+      "phone": currentUserModel!.phone,
+      "originAddress": userLocation.locationName,
+      "destinationAddress": providerLocation.locationName,
+      "providerID": "waiting"
+    };
+    prequest!.set(locationMap);
+
     nearbyActiveSPList = ActiveProvider.availableProvider;
     getNearbySP();
   }
 
   getNearbySP() async {
     if (nearbyActiveSPList.isEmpty) {
-      /*This reomves the service request*/
+      prequest!.remove();
+      /*This removes the service request*/
       setState(() {
         polylineSet.clear();
         markerSet.clear();
@@ -452,31 +518,26 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
       return;
     }
-    await retrieveProvider(nearbyActiveSPList);
-    Navigator.of(context).push(
-        MaterialPageRoute(builder: ((context) => const MFYPActiveProvider())));
+    await retrieveProviderList(nearbyActiveSPList);
   }
 
-  DatabaseReference ref = FirebaseDatabase.instance.ref().child("provider");
-  retrieveProvider(List nearby) async {
+  retrieveProviderList(List nearby) async {
+    /* This pieee of code helps to add all the list of available providers from the Firebase to the list to render to users */
+    DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
     for (int i = 0; nearby.isNotEmpty; i++) {
       await ref
           .child(nearbyActiveSPList[i].providerID.toString())
           .once()
-          .then((data) {
+          .then((data) async {
         var providerID = data.snapshot.value;
         providerKeyList.add(providerID);
-        /* Displaying service provider information on new screen */
+        if (await Navigator.of(context).push(MaterialPageRoute(
+                builder: ((c) => MFYPActiveProvider(request: prequest)))) ==
+            "ClearProviderList") {
+          providerKeyList.clear();
+          /* This piece of code removes the list of available active provider list on pop action as if not clear, the list will keep grow on checking the active provider list subsequently */
+        }
       });
-    }
-  }
-
-  addProviderIcon() {
-    if (activeNearbyIcon == null) {
-      ImageConfiguration imgConfig =
-          createLocalImageConfiguration(context, size: const Size(2, 2));
-      BitmapDescriptor.fromAssetImage(imgConfig, "assetName.png")
-          .then((value) => {activeNearbyIcon = value});
     }
   }
 
