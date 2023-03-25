@@ -10,7 +10,10 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:mfyp_cust/includes/mixins/reverse.geocoding.mixin.dart';
+import 'package:mfyp_cust/includes/models/location.direction.model.dart';
+import 'package:mfyp_cust/screens/history.scr.dart';
 import 'package:provider/provider.dart';
+import 'package:quickalert/quickalert.dart';
 import '../includes/api_key.dart';
 import '../includes/global.dart';
 import '../includes/handlers/user.info.handler.provider.dart';
@@ -352,7 +355,6 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             activeProvider.locationLat = map["latitude"];
             activeProvider.locationLong = map["longitude"];
             ActiveProvider.availableProvider.add(activeProvider);
-            print("Hello");
 
             if (activeProviderLoadedKey == true) {
               displayActiveProviderMarker();
@@ -400,63 +402,65 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       for (ActiveProviderModel provider in ActiveProvider.availableProvider) {
         LatLng providerPosition =
             LatLng(provider.locationLat!, provider.locationLong!);
-        
-        
-        ref.child(provider.providerID!).once().then((snappedValue) {
-          if (snappedValue.snapshot.value != null) {
-            var providerID = snappedValue.snapshot.value;
-            providerKeyList.add(providerID);
-            currentUserModelLocal =
-                UserModel.fromSnapshot(snappedValue.snapshot);
-            Provider.of<MFYPUserInfo>(context, listen: false)
-                .getProviderDetails(currentUserModelLocal!);
-          }
-        });
-        Future.delayed(const Duration(seconds: 2), () {
+
+        Future.delayed(const Duration(milliseconds: 500), () {
           Marker providerMarker = Marker(
             icon: BitmapDescriptor.defaultMarker,
             markerId: MarkerId(provider.providerID!),
             position: providerPosition,
             rotation: 360,
             infoWindow: InfoWindow(
-              title: context.read<MFYPUserInfo>().activeProvider != null
-                  ? context.read<MFYPUserInfo>().activeProvider!.fullName
-                  : currentUserModelLocal!.fullName,
-              snippet: context.read<MFYPUserInfo>().activeProvider != null
-                  ? context.read<MFYPUserInfo>().activeProvider!.phone
-                  : "Hello",
-              onTap: () => showDialog(
-                context: context,
-                builder: (context) => MFYPDialogAction(
-                  title:
-                      "${context.read<MFYPUserInfo>().activeProvider!.fullName}'s Information",
-                  content: Column(
-                    children: [
-                      Text(
-                        context.read<MFYPUserInfo>().activeProvider!.fullName!,
-                        style: const TextStyle(fontSize: 12),
-                      ),
-                      const SizedBox(height: 15),
-                      Text(
-                        currentUserModelLocal!.phone!,
-                      ),
-                      const SizedBox(height: 15),
-                      const Text(
-                        "Provider Categories",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ],
-                  ),
-                  actions: [
-                    MFYPTextButton(
-                      text: "Cancel",
-                      onPressed: () => Navigator.of(context).pop(),
-                    ),
-                    ElevatedButton(onPressed: () => null, child: Text("Hello"))
-                  ],
-                ),
-              ),
-            ),
+                title: "Click to proceed",
+                onTap: () async {
+                  await ref
+                      .child(provider.providerID.toString())
+                      .once()
+                      .then((data) {
+                    currentUserModelLocal =
+                        UserModel.fromSnapshot(data.snapshot);
+                  });
+                  QuickAlert.show(
+                    context: context,
+                    backgroundColor: AppColor.textFieldColor.withAlpha(50),
+                    type: QuickAlertType.custom,
+                    barrierDismissible: false,
+                    showCancelBtn: true,
+                    confirmBtnText: "SEND",
+                    customAsset: 'assets/image/provider.png',
+                    widget: const Text("User Rating"),
+                    cancelBtnText: "CANCEL",
+                    onCancelBtnTap: () => Navigator.pop(context),
+                    confirmBtnColor: AppColor.primaryColor,
+                    confirmBtnTextStyle:
+                        const TextStyle(fontSize: 12, color: Colors.white),
+                    cancelBtnTextStyle: const TextStyle(
+                        fontSize: 12, color: AppColor.primaryColor),
+                    onConfirmBtnTap: () async {
+                      LocationDirection locationDirection = LocationDirection();
+                      locationDirection.locationLat = provider.locationLat;
+                      locationDirection.locationLong = provider.locationLong;
+                      Provider.of<MFYPUserInfo>(context, listen: false).getProviderLatLng(locationDirection);
+                      saveRequestInfo();
+                      Navigator.pop(context);
+                      await Future.delayed(const Duration(milliseconds: 1000));
+                      await QuickAlert.show(
+                        confirmBtnColor: AppColor.primaryColor,
+                        confirmBtnText: "History",
+                        onConfirmBtnTap: () => const MFYPHistoryScreen(),
+                        cancelBtnText: "OK",
+                        showCancelBtn: true,
+                        cancelBtnTextStyle:
+                            const TextStyle(fontSize: 12, color: Colors.white),
+                        onCancelBtnTap: () => Navigator.of(context).pop(),
+                        context: context,
+                        type: QuickAlertType.success,
+                        text: "Request Sent",
+                      );
+                    },
+                    title: currentUserModelLocal!.fullName,
+                    text: currentUserModelLocal!.fullName,
+                  );
+                }),
           );
           providerSet.add(providerMarker);
           setState(() {
@@ -469,7 +473,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
   saveRequestInfo() {
     /* This function save the request made by the user and accepted by the provider and this is served to the Firebase */
-    prequest = FirebaseDatabase.instance.ref().child("Requests").push();
+    prequest = FirebaseDatabase.instance.ref().child("requests").push();
     var userLocation = context.read<MFYPUserInfo>().userCurrentPointLocation;
     var providerLocation = context.read<MFYPUserInfo>().techSPLocation;
 
@@ -496,7 +500,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     prequest!.set(locationMap);
 
     nearbyActiveSPList = ActiveProvider.availableProvider;
-    getNearbySP();
+    // getNearbySP();
   }
 
   getNearbySP() async {

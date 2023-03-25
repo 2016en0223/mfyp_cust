@@ -49,10 +49,12 @@ dependencies:
   geolocator: ^9.0.2
   flutter_geofire: ^2.0.3
   smooth_star_rating_null_safety: ^1.0.4+2
-  flutter_svg: ^2.0.1
+  # flutter_svg: ^2.0.1
   smooth_page_indicator: ^1.0.0+2
   smooth_star_rating: ^1.1.1
   pin_code_fields: ^7.3.0
+  adaptive_dialog: ^1.8.2
+  quickalert: ^1.0.1
 
 dev_dependencies:
   flutter_test:
