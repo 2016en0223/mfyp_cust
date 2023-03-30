@@ -1,5 +1,6 @@
 //---------------------------------Dependencies---------------------------------
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mfyp_cust/screens/history.scr.dart';
 import 'account.scr.dart';
@@ -40,6 +41,7 @@ class MFYPMainScreenState extends State<MFYPMainScreen>
   @override
   void initState() {
     super.initState();
+    deviceLocationPermission();
     tabController = TabController(length: 4, vsync: this);
   }
 
@@ -49,6 +51,7 @@ class MFYPMainScreenState extends State<MFYPMainScreen>
       appBar: AppBar(
         toolbarHeight: 0,
         elevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle.light
       ),
       bottomNavigationBar: BottomNavigationBar(
         items: const [

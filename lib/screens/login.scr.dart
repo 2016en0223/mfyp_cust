@@ -5,12 +5,15 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../includes/global.dart';
+import '../includes/models/user.mixin.model.dart';
 import '../includes/models/user.model.inc.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import '../includes/utilities/textfield.util.dart';
 import 'home.scr.dart';
+import 'main.scr.dart';
 import 'register.scr.dart';
+import 'welcome.scr.dart';
 
 class MFYPLogin extends StatefulWidget {
   const MFYPLogin({Key? key}) : super(key: key);
@@ -23,24 +26,26 @@ class MFYPLoginState extends State<MFYPLogin> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
-        centerTitle: true,
+        automaticallyImplyLeading: true,
         backgroundColor: Colors.white,
         elevation: 0,
-        title: const Text('Sign in',
+        title: const Text(
+          'Sign In',
             style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontWeight: FontWeight.w600)),
+              color: Colors.black87, fontWeight: FontWeight.w900, fontSize: 18),
+        ),
         leading: IconButton(
           onPressed: () {
-            Navigator.of(context).pop();
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: ((context) => const MFYPWelcomePage()),
+              ),
+            );
+            ;
           },
           icon: const Icon(
             Icons.arrow_back_ios_new_outlined,
@@ -61,7 +66,7 @@ class MFYPLoginState extends State<MFYPLogin> {
             child: const Text(
               'Welcome Back! 😁',
               style: TextStyle(
-                color: AppColor.primaryColor,
+                color: Colors.black87,
                 fontWeight: FontWeight.w700,
                 fontSize: 20,
               ),
@@ -69,12 +74,11 @@ class MFYPLoginState extends State<MFYPLogin> {
           ),
           Container(
             margin: const EdgeInsets.only(bottom: 32),
-            child: Text(
+            child: const Text(
               "This page enables registered user to sign in into the project!",
+             
               style: TextStyle(
-                  color: AppColor.primaryColor.withOpacity(0.7),
-                  fontSize: 12,
-                  height: 150 / 100),
+                  color: Colors.black87, fontSize: 12, height: 150 / 100),
             ),
           ),
           // Section 2 - Form
@@ -110,6 +114,7 @@ class MFYPLoginState extends State<MFYPLogin> {
           // Sign In button
           ElevatedButton(
             onPressed: () {
+              
               validate();
             },
             style: ElevatedButton.styleFrom(
@@ -171,12 +176,12 @@ class MFYPLoginState extends State<MFYPLogin> {
             .child(currentFirebaseUser!.uid);
         databaseReference.once().then((data) {
           if (data.snapshot.value != null) {
-            UserModel.readUserInfo();
+            UserMixin.readUserInfo();
           }
           Future.delayed(
-              const Duration(seconds: 3),
+              const Duration(milliseconds: 2000),
               () => Navigator.of(context).pushReplacement(MaterialPageRoute(
-                  builder: (context) => const MFYPHomeScreen())));
+                  builder: (context) => const MFYPMainScreen())));
         });
       }
     } on FirebaseAuthException catch (e) {
@@ -196,39 +201,45 @@ class MFYPLoginState extends State<MFYPLogin> {
   Widget bottom() {
     return Container(
       width: MediaQuery.of(context).size.width,
-      height: 48,
+      height: 50,
       alignment: Alignment.center,
-      child: TextButton(
-        onPressed: () {
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => const MFYPSignUpScreen()));
-        },
-        style: TextButton.styleFrom(
-          foregroundColor: AppColor.primaryColor.withOpacity(0.1),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Dont have an account?',
-              style: TextStyle(
-                color: AppColor.primaryColor.withOpacity(0.7),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Dont have an account?',
+            style: TextStyle(
+              color: AppColor.primaryColor.withOpacity(0.7),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
-            const Text(
-              ' Sign up',
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const MFYPSignUpScreen()));
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColor.primaryColor.withOpacity(0.1),
+            ),
+            child: const Text(
+              "Sign up",
               style: TextStyle(
                 color: AppColor.primaryColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
+        
+            
+            
+        
+        
+      
     );
   }
 }

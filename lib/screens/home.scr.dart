@@ -2,6 +2,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -9,27 +10,28 @@ import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:material_dialogs/material_dialogs.dart';
+import 'package:material_dialogs/shared/types.dart';
 import 'package:mfyp_cust/includes/mixins/reverse.geocoding.mixin.dart';
 import 'package:mfyp_cust/includes/models/location.direction.model.dart';
 import 'package:mfyp_cust/screens/history.scr.dart';
+import 'package:mfyp_cust/screens/main.scr.dart';
 import 'package:provider/provider.dart';
 import 'package:quickalert/quickalert.dart';
-import '../includes/api_key.dart';
+import 'package:shirne_dialog/shirne_dialog.dart';
 import '../includes/global.dart';
 import '../includes/handlers/user.info.handler.provider.dart';
 import '../includes/mixins/service.provider.mixin.dart';
 import '../includes/models/activeprovider.model.dart';
-import '../includes/models/direction.details.model.dart';
+import '../includes/models/user.mixin.model.dart';
 import '../includes/models/user.model.inc.dart';
 import '../includes/assistants/get.encoded.points.assistant.dart';
-import '../includes/assistants/requests.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import '../main.dart';
 import 'active.provider.dart';
 import 'login.scr.dart';
-import 'main.scr.dart';
 import 'search.scr.dart';
 
 //----------------------------------End-----------------------------------------
@@ -58,13 +60,15 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   bool activeProviderLoadedKey = false;
   List<ActiveProviderModel> nearbyActiveSPList = [];
   BitmapDescriptor? activeNearbyIcon;
+
 //-----------------------------------End-----------------------------------------
 
   @override
   void initState() {
     super.initState();
     initLogin();
-    deviceLocationPermission();
+
+    getUserCurrentLocation();
   }
 
   @override
@@ -101,9 +105,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         _mapControllerCompleter.complete(controller);
         newGMController = controller;
         setState(() {
-          googleMapPadding = 170;
+          googleMapPadding = 200;
         });
-        getUserCurrentLocation();
       });
   requestUI() {
     double height = MediaQuery.of(context).size.height * 0.25;
@@ -127,49 +130,38 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             Row(
-              children: const [
-                Icon(
+              children: [
+                const Icon(
                   Icons.navigation_outlined,
-                  color: AppColor.primaryColor,
+                  color: Colors.black87,
+                  size: 24,
                 ),
-                SizedBox(
+                const SizedBox(
                   width: 10,
                 ),
                 Text(
-                  "Your location",
-                  style: TextStyle(
+                  Provider.of<MFYPUserInfo>(context).userCurrentPointLocation ==
+                          null
+                      ? "Loading..."
+                      : "${(context.read<MFYPUserInfo>().userCurrentPointLocation!.formattedAddress!).substring(0, 20)}...",
+                  style: const TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: 20,
                   ),
                 ),
               ],
             ),
-            Row(
-              children: [
-                const SizedBox(
-                  width: 35,
-                ),
-                Text(
-                  overflow: TextOverflow.ellipsis,
-                  Provider.of<MFYPUserInfo>(context).userCurrentPointLocation ==
-                          null
-                      ? "Loading..."
-                      : (context
-                              .read<MFYPUserInfo>()
-                              .userCurrentPointLocation!
-                              .formattedAddress!)
-                          .substring(0, 8),
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
             const SizedBox(
-              height: 5,
+              height: 2,
             ),
             Row(
               children: [
+                const Icon(
+                  Icons.car_repair_outlined,
+                  color: Colors.black87,
+                  size: 24,
+                ),
                 const SizedBox(
-                  width: 35,
+                  width: 10,
                 ),
                 Column(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -207,7 +199,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
               ),
             ),
             MFYPButton(
-                text: "Request",
+                text: currentUserModel == null
+                    ? "Hello"
+                    : currentUserModel!.fullName.toString(),
                 onPressed: () {
                   if (Provider.of<MFYPUserInfo>(context, listen: false)
                           .techSPLocation ==
@@ -215,7 +209,37 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                     snackBarMessage(
                         "Select the nearest provider to proceed.", context);
                   } else {
-                    saveRequestInfo();
+                    showModalBottomSheet(
+                      shape: const RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.vertical(top: Radius.circular(20))),
+                      backgroundColor: Colors.white,
+                      elevation: 20,
+                      context: context,
+                      builder: (context) {
+                        return Wrap(
+                          children: [
+                            ListTile(
+                                leading: const Icon(Icons.library_add_outlined),
+                                title: const Text("Book Appointment"),
+                                onTap: () => Navigator.of(context).pop()),
+                            ListTile(
+                              leading: const Icon(Icons.car_repair_outlined),
+                              title: const Text("On the go"),
+                              onTap: () {
+                                saveRequestInfo();
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            ListTile(
+                              leading: const Icon(Icons.close_outlined),
+                              title: const Text("Cancel"),
+                              onTap: () => Navigator.of(context).pop(),
+                            ),
+                          ],
+                        );
+                      },
+                    );
                   }
                 }),
           ],
@@ -228,9 +252,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 //---------------------------------Logics---------------------------------------
 
   initLogin() {
-    fAuth.currentUser != null ? UserModel.readUserInfo() : null;
+    currentFirebaseUser == null ? null : UserMixin.readUserInfo();
     Timer(const Duration(seconds: 3), () {
-      if (fAuth.currentUser == null) {
+      if (currentFirebaseUser == null) {
         Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (ctx) => const MFYPLogin()));
       }
@@ -254,6 +278,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   Future drawPolylines() async {
     var userPosition = Provider.of<MFYPUserInfo>(context, listen: false)
         .userCurrentPointLocation;
+
     var techPosition =
         Provider.of<MFYPUserInfo>(context, listen: false).techSPLocation;
 
@@ -283,8 +308,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
     setState(() {
       Polyline drawLine = Polyline(
+        
           polylineId: const PolylineId("1"),
-          width: 5,
+          width: 3,
           color: AppColor.primaryColor,
           jointType: JointType.round,
           points: decodedLatLng,
@@ -308,16 +334,16 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     } else {
       bounds = LatLngBounds(southwest: userLatLng, northeast: techSPLatLng);
     }
-    newGMController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
+    newGMController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 130));
     Marker userMarker = Marker(
       infoWindow: InfoWindow(
-          title: userPosition.locationName, snippet: "User Location"),
+          title: "User Location", snippet: userPosition.formattedAddress),
       markerId: const MarkerId("user"),
       position: userLatLng,
     );
     Marker techSPMarker = Marker(
       infoWindow: InfoWindow(
-          title: techPosition.locationName, snippet: "Workshop Location"),
+          title: techPosition.locationName, snippet: "Provider Location"),
       markerId: const MarkerId("provider"),
       position: techSPLatLng,
     );
@@ -357,7 +383,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             ActiveProvider.availableProvider.add(activeProvider);
 
             if (activeProviderLoadedKey == true) {
-              displayActiveProviderMarker();
+              displayActiveProviderMarker(activeProvider.providerID!);
             }
             break;
 
@@ -373,7 +399,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             activeProvider.locationLong = map["longitude"];
             ActiveProvider.availableProvider.add(activeProvider);
             ActiveProvider.updateProviderPoint(activeProvider);
-            displayActiveProviderMarker();
+            displayActiveProviderMarker(activeProvider.providerID!);
             break;
 
           case Geofire.onGeoQueryReady:
@@ -382,14 +408,14 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
               activeProviderLoadedKey = true;
             });
 
-            displayActiveProviderMarker();
+            displayActiveProviderMarker(map["key"]);
             break;
         }
       }
     });
   }
 
-  displayActiveProviderMarker() async {
+  displayActiveProviderMarker(String providerKey) async {
     UserModel? currentUserModelLocal;
     DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
     /* This snippet helps to display the nearby provider with marker */
@@ -410,15 +436,124 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             position: providerPosition,
             rotation: 360,
             infoWindow: InfoWindow(
-                title: "Click to proceed",
+                title: "Proceed",
                 onTap: () async {
-                  await ref
-                      .child(provider.providerID.toString())
-                      .once()
-                      .then((data) {
+                  await ref.child(providerKey).once().then((data) {
                     currentUserModelLocal =
                         UserModel.fromSnapshot(data.snapshot);
                   });
+                  Dialogs.materialDialog(
+                      barrierDismissible: false,
+                      barrierColor: Colors.transparent,
+                      color: Colors.white,
+                      title: "New Request Information",
+                      titleStyle: const TextStyle(
+                          fontWeight: FontWeight.w800, fontSize: 20),
+                      customView: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 18),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                const Icon(Icons.person),
+                                const SizedBox(
+                                  width: 8,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    currentUserModelLocal!.fullName!,
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 8,
+                            ),
+                            Row(
+                              children: [
+                                const Icon(Icons.location_on_outlined),
+                                const SizedBox(
+                                  width: 8,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    "Office Address",
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 8,
+                            ),
+                            Row(
+                              children: [
+                                const Icon(Icons.phone_android_outlined),
+                                const SizedBox(
+                                  width: 8,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    "Contact Number" ?? "hello" ?? "Hi",
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(
+                              height: 8,
+                            ),
+                            Row(
+                              children: [
+                                const Icon(Icons.car_repair_outlined),
+                                const SizedBox(
+                                  width: 8,
+                                ),
+                                Expanded(
+                                  child: Text(
+                                    "Service Type",
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      customViewPosition: CustomViewPosition.BEFORE_ACTION,
+                      context: context,
+                      actions: [
+                        MFYPTextButton(
+                          text: "Back",
+                          onPressed: (() {
+                            Navigator.of(context).pop();
+                          }),
+                        ),
+                        MFYPButton(
+                          onPressed: () {
+                            LocationDirection locationDirection =
+                                LocationDirection();
+                            locationDirection.locationLat =
+                                provider.locationLat;
+                            locationDirection.locationLong =
+                                provider.locationLong;
+                            locationDirection.locationName =
+                                currentUserModelLocal!.email;
+                            Provider.of<MFYPUserInfo>(context, listen: false)
+                                .getProviderLatLng(locationDirection);
+                            Navigator.pop(context);
+                            drawPolylines();
+                          },
+                          text: "Select",
+                          fontSize: 14,
+                        ),
+                      ]);
+        
                   QuickAlert.show(
                     context: context,
                     backgroundColor: AppColor.textFieldColor.withAlpha(50),
@@ -435,29 +570,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                         const TextStyle(fontSize: 12, color: Colors.white),
                     cancelBtnTextStyle: const TextStyle(
                         fontSize: 12, color: AppColor.primaryColor),
-                    onConfirmBtnTap: () async {
-                      LocationDirection locationDirection = LocationDirection();
-                      locationDirection.locationLat = provider.locationLat;
-                      locationDirection.locationLong = provider.locationLong;
-                      Provider.of<MFYPUserInfo>(context, listen: false).getProviderLatLng(locationDirection);
-                      saveRequestInfo();
-                      Navigator.pop(context);
-                      await Future.delayed(const Duration(milliseconds: 1000));
-                      await QuickAlert.show(
-                        confirmBtnColor: AppColor.primaryColor,
-                        confirmBtnText: "History",
-                        onConfirmBtnTap: () => const MFYPHistoryScreen(),
-                        cancelBtnText: "OK",
-                        showCancelBtn: true,
-                        cancelBtnTextStyle:
-                            const TextStyle(fontSize: 12, color: Colors.white),
-                        onCancelBtnTap: () => Navigator.of(context).pop(),
-                        context: context,
-                        type: QuickAlertType.success,
-                        text: "Request Sent",
-                      );
-                    },
-                    title: currentUserModelLocal!.fullName,
+              
+                    
                     text: currentUserModelLocal!.fullName,
                   );
                 }),
@@ -495,55 +609,55 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       "phone": currentUserModel!.phone,
       "originAddress": userLocation.locationName,
       "destinationAddress": providerLocation.locationName,
-      "providerID": "waiting"
+      "providerID": "Waiting"
     };
     prequest!.set(locationMap);
 
-    nearbyActiveSPList = ActiveProvider.availableProvider;
+    // nearbyActiveSPList = ActiveProvider.availableProvider;
     // getNearbySP();
   }
 
-  getNearbySP() async {
-    if (nearbyActiveSPList.isEmpty) {
-      prequest!.remove();
-      /*This removes the service request*/
-      setState(() {
-        polylineSet.clear();
-        markerSet.clear();
-        circleSet.clear();
-        nearbyActiveSPList.clear();
-      });
+  // getNearbySP() async {
+  //   if (nearbyActiveSPList.isEmpty) {
+  //     prequest!.remove();
+  //     /*This removes the service request*/
+  //     setState(() {
+  //       polylineSet.clear();
+  //       markerSet.clear();
+  //       circleSet.clear();
+  //       nearbyActiveSPList.clear();
+  //     });
 
-      snackBarMessage("No provider available at the moment.", context);
-      //Using Snackbar display no provider available
-      Future.delayed(const Duration(seconds: 3), () {
-        MyApp.restartApp(context);
-      });
+  //     snackBarMessage("No provider available at the moment.", context);
+  //     //Using Snackbar display no provider available
+  //     Future.delayed(const Duration(seconds: 3), () {
+  //       MyApp.restartApp(context);
+  //     });
 
-      return;
-    }
-    await retrieveProviderList(nearbyActiveSPList);
-  }
+  //     return;
+  //   }
+  //   await retrieveProviderList(nearbyActiveSPList);
+  // }
 
-  retrieveProviderList(List nearby) async {
-    /* This pieee of code helps to add all the list of available providers from the Firebase to the list to render to users */
-    DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
-    for (int i = 0; nearby.isNotEmpty; i++) {
-      await ref
-          .child(nearbyActiveSPList[i].providerID.toString())
-          .once()
-          .then((data) async {
-        var providerID = data.snapshot.value;
-        providerKeyList.add(providerID);
-        if (await Navigator.of(context).push(MaterialPageRoute(
-                builder: ((c) => MFYPActiveProvider(request: prequest)))) ==
-            "ClearProviderList") {
-          providerKeyList.clear();
-          /* This piece of code removes the list of available active provider list on pop action as if not clear, the list will keep grow on checking the active provider list subsequently */
-        }
-      });
-    }
-  }
+  // retrieveProviderList(List nearby) async {
+  //   /* This pieee of code helps to add all the list of available providers from the Firebase to the list to render to users */
+  //   DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
+  //   for (int i = 0; nearby.isNotEmpty; i++) {
+  //     await ref
+  //         .child(nearbyActiveSPList[i].providerID.toString())
+  //         .once()
+  //         .then((data) async {
+  //       var providerID = data.snapshot.value;
+  //       providerKeyList.add(providerID);
+  //       if (await Navigator.of(context).push(MaterialPageRoute(
+  //               builder: ((c) => MFYPActiveProvider(request: prequest)))) ==
+  //           "ClearProviderList") {
+  //         providerKeyList.clear();
+  //         /* This piece of code removes the list of available active provider list on pop action as if not clear, the list will keep grow on checking the active provider list subsequently */
+  //       }
+  //     });
+  //   }
+  // }
 
 //-----------------------------------End-----------------------------------------
 }

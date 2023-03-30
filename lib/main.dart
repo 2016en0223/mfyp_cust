@@ -1,14 +1,13 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:mfyp_cust/includes/utilities/colors.dart';
-import 'package:mfyp_cust/screens/active.provider.dart';
 import 'package:mfyp_cust/screens/main.scr.dart';
-import 'package:mfyp_cust/screens/register.scr.dart';
 import 'package:provider/provider.dart';
+import 'package:shirne_dialog/shirne_dialog.dart';
 import 'firebase_option.dart';
 import 'includes/handlers/user.info.handler.provider.dart';
-import 'screens/welcome.scr.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,6 +27,15 @@ void main() async {
         create: (context) => MFYPUserInfo(),
         child: MaterialApp(
           title: 'Drivers App',
+          navigatorKey: MyDialog.navigatorKey,
+          localizationsDelegates: const [
+            ShirneDialogLocalizations.delegate,
+
+            // flutter locals see [https://docs.flutter.dev/development/accessibility-and-localization/internationalization]
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
           theme: ThemeData(
             primarySwatch: Colors.cyan,
             fontFamily: "SanFrancisco",

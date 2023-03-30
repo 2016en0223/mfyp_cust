@@ -60,9 +60,27 @@ class MFYPDialogAction extends StatelessWidget {
     );
   }
 }
-snackBarMessage(String message, BuildContext context) {
+snackBarMessage(String message, [ctx]) {
   SnackBar snackBar = SnackBar(
-    content: Text("{$message}"),
+    duration: const Duration(milliseconds: 1000),
+    closeIconColor: Colors.white,
+    showCloseIcon: true,
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+    behavior: SnackBarBehavior.floating,
+    dismissDirection: DismissDirection.endToStart,
+    margin: EdgeInsets.only(
+        right: MediaQuery.of(ctx).size.width * 0.1,
+        left: MediaQuery.of(ctx).size.width * 0.1,
+        bottom: MediaQuery.of(ctx).size.height * 0.1),
+    elevation: 15,
+    backgroundColor: const Color.fromARGB(101, 1, 97, 112),
+    content: Text(
+      message,
+      textAlign: TextAlign.center,
+      overflow: TextOverflow.clip,
+      softWrap: true,
+      style: const TextStyle(fontSize: 12),
+    ),
   );
-  return ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  return ScaffoldMessenger.of(ctx).showSnackBar(snackBar);
 }

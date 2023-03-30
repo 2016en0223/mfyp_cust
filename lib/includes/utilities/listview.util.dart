@@ -34,7 +34,7 @@ class MFYPListView extends StatelessWidget {
           urlRequest["result"]["geometry"]["location"]["lng"];
       userDirection.placeID = placeID;
       Provider.of<MFYPUserInfo>(context, listen: false)
-          .getServiceProviderPoint(userDirection);
+          .getProviderLatLng(userDirection);
       Navigator.pop(context, "Home");
     }
   }

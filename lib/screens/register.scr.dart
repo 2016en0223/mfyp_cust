@@ -1,14 +1,16 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:mfyp_cust/screens/main.scr.dart';
 import '../includes/global.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import '../includes/utilities/textfield.util.dart';
 import 'login.scr.dart';
+import 'main.scr.dart';
+import 'welcome.scr.dart';
 
 const String errorMsg = "";
 
@@ -128,19 +130,24 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          automaticallyImplyLeading: false,
-          centerTitle: true,
-          backgroundColor: AppColor.primaryColor,
+          automaticallyImplyLeading: true,
+          backgroundColor: Colors.white,
           elevation: 0,
-          toolbarHeight: 0,
-          title: const Text("Sign up",
+          systemOverlayStyle: SystemUiOverlayStyle.light,
+          title: const Text(
+            "Sign Up",
               style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600)),
+                color: Colors.black87,
+                fontWeight: FontWeight.w900,
+                fontSize: 18),
+          ),
           leading: IconButton(
             onPressed: () {
-              Navigator.of(context).pop();
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: ((context) => const MFYPWelcomePage()),
+                ),
+              );
             },
             icon: const Icon(
               Icons.arrow_back_ios_new_outlined,
@@ -153,31 +160,31 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
         body: SingleChildScrollView(
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-                height: 50,
-                width: double.infinity,
-                child: Row(
-                  children: [
-                    IconButton(
-                      onPressed: () => Navigator.of(context).pop,
-                      iconSize: 16,
-                      color: AppColor.primaryColor,
-                      icon: const Icon(Icons.arrow_back_ios_new_outlined),
-                    ),
-                    const Text(
-                      "Registration",
-                      style: TextStyle(
-                          color: Colors.black87,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 18),
-                    )
-                  ],
-                ),
-              ),
-              const SizedBox(
-                height: 15,
-              ),
+              // Container(
+              //   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
+              //   height: 50,
+              //   width: double.infinity,
+              //   child: Row(
+              //     children: [
+              //       IconButton(
+              //         onPressed: () => Navigator.of(context).pop,
+              //         iconSize: 16,
+              //         color: AppColor.primaryColor,
+              //         icon: const Icon(Icons.arrow_back_ios_new_outlined),
+              //       ),
+              //       const Text(
+              //         "Registration",
+              //         style: TextStyle(
+              //             color: Colors.black87,
+              //             fontWeight: FontWeight.w900,
+              //             fontSize: 18),
+              //       )
+              //     ],
+              //   ),
+              // ),
+              // const SizedBox(
+              //   height: 15,
+              // ),
               ListView(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -187,7 +194,7 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
                   Container(
                     margin: const EdgeInsets.only(top: 20, bottom: 12),
                     child: const Text(
-                      'Welcome to MFYP Provider 👋',
+                      'User Registration 👋',
                       style: TextStyle(
                         color: Colors.black87,
                         fontWeight: FontWeight.w700,
@@ -298,44 +305,41 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
         ));
   }
 
-  bottomNavigation() {
+  Widget bottomNavigation() {
     return Container(
       width: MediaQuery.of(context).size.width,
       height: 48,
       alignment: Alignment.center,
-      child: TextButton(
-        onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(
-              builder: (context) => const MFYPLogin(),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            'Dont have an account?',
+            style: TextStyle(
+              color: AppColor.primaryColor.withOpacity(0.7),
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
-          );
-        },
-        style: TextButton.styleFrom(
-          foregroundColor: AppColor.secondary.withOpacity(0.1),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'Already have an account?',
-              style: TextStyle(
-                color: AppColor.secondary.withOpacity(0.7),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const MFYPLogin()));
+            },
+            style: TextButton.styleFrom(
+              foregroundColor: AppColor.primaryColor.withOpacity(0.1),
             ),
-            const Text(
+            child: const Text(
               "Sign in",
               style: TextStyle(
-                color: AppColor.primary,
+                color: AppColor.primaryColor,
                 fontSize: 14,
                 fontWeight: FontWeight.w700,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

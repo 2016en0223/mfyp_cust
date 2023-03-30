@@ -1,7 +1,5 @@
 import 'package:firebase_database/firebase_database.dart';
 
-import '../global.dart';
-
 class UserModel {
   String? fullName, email, userID, latitude, longitude, phone;
 
@@ -22,18 +20,5 @@ class UserModel {
     userID = snapshot.key;
   }
 
-  //Assistance Method to Fetch Current Online User Information
-
-  static void readUserInfo() {
-    currentFirebaseUser = fAuth.currentUser!;
-    databaseReference = FirebaseDatabase.instance
-        .ref()
-        .child("providers")
-        .child(currentFirebaseUser!.uid);
-    databaseReference!.once().then((snappedValue) {
-      if (snappedValue.snapshot.value != null) {
-        currentUserModel = UserModel.fromSnapshot(snappedValue.snapshot);
-      }
-    });
-  }
+  
 }

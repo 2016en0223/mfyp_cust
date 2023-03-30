@@ -4,7 +4,14 @@ import 'colors.dart';
 class MFYPButton extends StatelessWidget {
   final String text;
   final VoidCallback onPressed;
-  const MFYPButton({Key? key, required this.text, required this.onPressed})
+  final double? fontSize;
+  final FontWeight? fontWeight;
+  const MFYPButton(
+      {Key? key,
+      required this.text,
+      required this.onPressed,
+      this.fontSize,
+      this.fontWeight})
       : super(key: key);
 
   @override
@@ -23,15 +30,16 @@ class MFYPButton extends StatelessWidget {
         ),
         backgroundColor: AppColor.primaryColor,
         shadowColor: Colors.transparent,
-        
-        elevation: 0,
+        elevation: 2,
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        softWrap: false,
+        overflow: TextOverflow.visible,
+        style: TextStyle(
           color: Colors.white,
-          fontSize: 18,
-          fontWeight: FontWeight.bold,
+          fontSize: fontSize ?? 18,
+          fontWeight: fontWeight ?? FontWeight.bold,
         ),
       ),
     );
@@ -55,4 +63,3 @@ class MFYPTextButton extends StatelessWidget {
     );
   }
 }
-
