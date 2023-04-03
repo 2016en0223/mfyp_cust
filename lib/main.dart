@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:mfyp_cust/includes/utilities/colors.dart';
 import 'package:mfyp_cust/screens/main.scr.dart';
+import 'package:mfyp_cust/screens/welcome.scr.dart';
 import 'package:provider/provider.dart';
 import 'package:shirne_dialog/shirne_dialog.dart';
 import 'firebase_option.dart';
@@ -40,7 +41,7 @@ void main() async {
             primarySwatch: Colors.cyan,
             fontFamily: "SanFrancisco",
           ),
-          home: const MFYPMainScreen(),
+          home: const MFYPWelcomePage(),
           debugShowCheckedModeBanner: false,
         ),
       ),

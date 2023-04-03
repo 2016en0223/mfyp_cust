@@ -1,5 +1,5 @@
 class LocationDirection {
-  String? formattedAddress, locationName, placeID;
+  String? formattedAddress, locationName, placeID, providerID;
   double? locationLat, locationLong;
 
   LocationDirection(

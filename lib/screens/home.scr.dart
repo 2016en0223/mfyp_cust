@@ -308,7 +308,6 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
     setState(() {
       Polyline drawLine = Polyline(
-        
           polylineId: const PolylineId("1"),
           width: 3,
           color: AppColor.primaryColor,
@@ -383,7 +382,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             ActiveProvider.availableProvider.add(activeProvider);
 
             if (activeProviderLoadedKey == true) {
-              displayActiveProviderMarker(activeProvider.providerID!);
+              displayActiveProviderMarker();
             }
             break;
 
@@ -399,7 +398,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             activeProvider.locationLong = map["longitude"];
             ActiveProvider.availableProvider.add(activeProvider);
             ActiveProvider.updateProviderPoint(activeProvider);
-            displayActiveProviderMarker(activeProvider.providerID!);
+            displayActiveProviderMarker();
             break;
 
           case Geofire.onGeoQueryReady:
@@ -408,14 +407,14 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
               activeProviderLoadedKey = true;
             });
 
-            displayActiveProviderMarker(map["key"]);
+            displayActiveProviderMarker();
             break;
         }
       }
     });
   }
 
-  displayActiveProviderMarker(String providerKey) async {
+  displayActiveProviderMarker() async {
     UserModel? currentUserModelLocal;
     DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
     /* This snippet helps to display the nearby provider with marker */
@@ -436,9 +435,12 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
             position: providerPosition,
             rotation: 360,
             infoWindow: InfoWindow(
-                title: "Proceed",
+                title: ">>",
                 onTap: () async {
-                  await ref.child(providerKey).once().then((data) {
+                  await ref
+                      .child(provider.providerID.toString())
+                      .once()
+                      .then((data) {
                     currentUserModelLocal =
                         UserModel.fromSnapshot(data.snapshot);
                   });
@@ -446,7 +448,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                       barrierDismissible: false,
                       barrierColor: Colors.transparent,
                       color: Colors.white,
-                      title: "New Request Information",
+                      title: "Provider Information",
                       titleStyle: const TextStyle(
                           fontWeight: FontWeight.w800, fontSize: 20),
                       customView: Container(
@@ -472,9 +474,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                               height: 8,
                             ),
                             Row(
-                              children: [
-                                const Icon(Icons.location_on_outlined),
-                                const SizedBox(
+                              children: const [
+                                Icon(Icons.location_on_outlined),
+                                SizedBox(
                                   width: 8,
                                 ),
                                 Expanded(
@@ -490,9 +492,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                               height: 8,
                             ),
                             Row(
-                              children: [
-                                const Icon(Icons.phone_android_outlined),
-                                const SizedBox(
+                              children: const [
+                                Icon(Icons.phone_android_outlined),
+                                SizedBox(
                                   width: 8,
                                 ),
                                 Expanded(
@@ -508,9 +510,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                               height: 8,
                             ),
                             Row(
-                              children: [
-                                const Icon(Icons.car_repair_outlined),
-                                const SizedBox(
+                              children: const [
+                                Icon(Icons.car_repair_outlined),
+                                SizedBox(
                                   width: 8,
                                 ),
                                 Expanded(
@@ -542,10 +544,25 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                                 provider.locationLat;
                             locationDirection.locationLong =
                                 provider.locationLong;
+                            locationDirection.providerID = provider.providerID;
                             locationDirection.locationName =
                                 currentUserModelLocal!.email;
                             Provider.of<MFYPUserInfo>(context, listen: false)
                                 .getProviderLatLng(locationDirection);
+
+                            Marker selectedProviderMarker = Marker(
+                                icon: BitmapDescriptor.defaultMarker,
+                                markerId: MarkerId(provider.providerID!),
+                                position: providerPosition,
+                                rotation: 360,
+                                infoWindow: InfoWindow(
+                                  title: currentUserModelLocal!.fullName,
+                                  snippet: currentUserModelLocal!.latitude,
+                                ));
+                            setState(() {
+                              markerSet.clear();
+                              markerSet.add(selectedProviderMarker);
+                            });
                             Navigator.pop(context);
                             drawPolylines();
                           },
@@ -553,27 +570,6 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                           fontSize: 14,
                         ),
                       ]);
-        
-                  QuickAlert.show(
-                    context: context,
-                    backgroundColor: AppColor.textFieldColor.withAlpha(50),
-                    type: QuickAlertType.custom,
-                    barrierDismissible: false,
-                    showCancelBtn: true,
-                    confirmBtnText: "SEND",
-                    customAsset: 'assets/image/provider.png',
-                    widget: const Text("User Rating"),
-                    cancelBtnText: "CANCEL",
-                    onCancelBtnTap: () => Navigator.pop(context),
-                    confirmBtnColor: AppColor.primaryColor,
-                    confirmBtnTextStyle:
-                        const TextStyle(fontSize: 12, color: Colors.white),
-                    cancelBtnTextStyle: const TextStyle(
-                        fontSize: 12, color: AppColor.primaryColor),
-              
-                    
-                    text: currentUserModelLocal!.fullName,
-                  );
                 }),
           );
           providerSet.add(providerMarker);
@@ -609,55 +605,22 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       "phone": currentUserModel!.phone,
       "originAddress": userLocation.locationName,
       "destinationAddress": providerLocation.locationName,
-      "providerID": "Waiting"
     };
     prequest!.set(locationMap);
+    String providerID =
+        context.read<MFYPUserInfo>().techSPLocation!.providerID.toString();
 
-    // nearbyActiveSPList = ActiveProvider.availableProvider;
-    // getNearbySP();
+    sendNotificationToProvider(providerID);
   }
 
-  // getNearbySP() async {
-  //   if (nearbyActiveSPList.isEmpty) {
-  //     prequest!.remove();
-  //     /*This removes the service request*/
-  //     setState(() {
-  //       polylineSet.clear();
-  //       markerSet.clear();
-  //       circleSet.clear();
-  //       nearbyActiveSPList.clear();
-  //     });
-
-  //     snackBarMessage("No provider available at the moment.", context);
-  //     //Using Snackbar display no provider available
-  //     Future.delayed(const Duration(seconds: 3), () {
-  //       MyApp.restartApp(context);
-  //     });
-
-  //     return;
-  //   }
-  //   await retrieveProviderList(nearbyActiveSPList);
-  // }
-
-  // retrieveProviderList(List nearby) async {
-  //   /* This pieee of code helps to add all the list of available providers from the Firebase to the list to render to users */
-  //   DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
-  //   for (int i = 0; nearby.isNotEmpty; i++) {
-  //     await ref
-  //         .child(nearbyActiveSPList[i].providerID.toString())
-  //         .once()
-  //         .then((data) async {
-  //       var providerID = data.snapshot.value;
-  //       providerKeyList.add(providerID);
-  //       if (await Navigator.of(context).push(MaterialPageRoute(
-  //               builder: ((c) => MFYPActiveProvider(request: prequest)))) ==
-  //           "ClearProviderList") {
-  //         providerKeyList.clear();
-  //         /* This piece of code removes the list of available active provider list on pop action as if not clear, the list will keep grow on checking the active provider list subsequently */
-  //       }
-  //     });
-  //   }
-  // }
+  sendNotificationToProvider(String selectedProviderID) {
+    FirebaseDatabase.instance
+        .ref()
+        .child("providers")
+        .child(selectedProviderID)
+        .child("status")
+        .set(prequest!.key!);
+  }
 
 //-----------------------------------End-----------------------------------------
 }
