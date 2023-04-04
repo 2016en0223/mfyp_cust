@@ -620,6 +620,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         .child(selectedProviderID)
         .child("status")
         .set(prequest!.key!);
+
+        Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => MFYP))
   }
 
 //-----------------------------------End-----------------------------------------
