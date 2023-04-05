@@ -1,0 +1,103 @@
+{
+    "workbench.startupEditor": "none",
+    "diffEditor.wordWrap": "on",
+    "editor.wordWrap": "on",
+    "editor.wordWrapColumn": 100,
+    "workbench.editor.wrapTabs": true,
+    "editor.suggestSelection": "first",
+    "editor.autoClosingBrackets": "always",
+    "files.autoSave": "afterDelay",
+    "workbench.editor.showIcons": true,
+    "python.analysis.autoImportCompletions": true,
+    "python.terminal.activateEnvironment": true,
+    "python.highlightActiveIndentation": true,
+    "vsintellicode.modify.editor.suggestSelection": "automaticallyOverrodeDefaultValue",
+    "window.menuBarVisibility": "true",
+    "workbench.editor.showTabs": true,
+    "workbench.activityBar.iconClickBehavior": "focus",
+    "workbench.list.smoothScrolling": true,
+    "workbench.settings.editor": "json",
+    "editor.fontFamily": "Consolas, 'Courier New', monospace",
+    "workbench.editorAssociations": {
+        "*.ipynb": "jupyter-notebook"
+    },
+    // "workbench.iconTheme": "vs-minimal",
+    "workbench.editor.tabSizing": "shrink",
+    "workbench.editor.tabCloseButton": "right",
+    "workbench.preferredDarkColorTheme": "GitHub Dark Default",
+    "workbench.trustedDomains.promptInTrustedWorkspace": false,
+    "editor.autoIndent": "advanced",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "editor.fontSize": 16,
+    "editor.matchBrackets": "always",
+    "editor.fontWeight": "600",
+    "git.fetchOnPull": true,
+    "files.autoSaveDelay": 10000,
+    "git.allowForcePush": true,
+    "workbench.commandPalette.history": 100,
+    "editor.formatOnPaste": true,
+    // "python.condaPath": "C:/ProgramData/Anaconda3/Scripts/conda.exe",
+    "launch": {
+        "configurations": []
+    },
+    "[dart]": {
+        "editor.formatOnSave": true,
+        "editor.formatOnType": true,
+        "editor.rulers": [
+            100
+        ],
+        "editor.selectionHighlight": false,
+        "editor.suggest.snippetsPreventQuickSuggestions": false,
+        "editor.suggestSelection": "first",
+        "editor.tabCompletion": "onlySnippets",
+        "editor.wordBasedSuggestions": false,
+        "editor.autoIndent": "full",
+    },
+    "dart.flutterHotReloadOnSave": "allIfDirty",
+    // "dart.openDevTools": "flutter",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "terminal.integrated.automationProfile.windows": null,
+    "terminal.integrated.confirmOnExit": "always",
+    "terminal.integrated.cursorStyle": "block",
+    "editor.formatOnSaveMode": "modificationsIfAvailable",
+    "workbench.colorCustomizations": {
+        "[Default Dark+]": {}
+    },
+    "workbench.iconTheme": "ayu",
+    "workbench.editor.autoLockGroups": {
+        "default": true,
+        "vscode-interactive-input": true,
+        "interactive": true
+    },
+    "workbench.editor.defaultBinaryEditor": "jupyter-notebook",
+    "[php]": {
+        "outline.showClasses": true,
+        "outline.showBooleans": true
+    },
+    "phpserver.browser": "edge",
+    "phpserver.ip": "localhost",
+    "explorer.confirmDragAndDrop": false,
+    "phpserver.phpPath": "/opt/lampp/php/man/man1/php.1",
+    "phpserver.port": 9000,
+    "php.suggest.basic": false,
+    "update.mode": "none",
+    "dart.checkForSdkUpdates": false,
+    "git.requireGitUserConfig": true,
+    "git.enableStatusBarSync": true,
+    "git.showProgress": true,
+    "update.showReleaseNotes": false,
+    "php.validate.enable": false,
+    "emmet.excludeLanguages": [
+        "markdown",
+        "php"
+    ],
+    "dart.flutterSdkPath": "/home/mustymar/flutter",
+    "workbench.colorTheme": "Hyper Term Black",
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "window.zoomLevel": -0.35,
+    "editor.stickyScroll.enabled": true,
+    "dart.hotReloadOnSave": "allIfDirty"
+}
