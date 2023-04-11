@@ -141,14 +141,14 @@ class MFYPLoginState extends State<MFYPLogin> {
 
   validate() {
     if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      snackBarMessage("A valid credential is required.", context);
+      snackBarMessage("A valid credential is required.");
     } else if (passwordController.text.isEmpty) {
-      snackBarMessage("Password is invalid", context);
+      snackBarMessage("Password is invalid");
     } else if (emailController.text.contains(regex) &&
         passwordController.text.isNotEmpty) {
       providerLogin();
     } else {
-      snackBarMessage("Bad format!", context);
+      snackBarMessage("Bad format!");
     }
   }
 
@@ -187,14 +187,14 @@ class MFYPLoginState extends State<MFYPLogin> {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
         Navigator.of(context).pop();
-        snackBarMessage("No user found for that email.", context);
+        snackBarMessage("No user found for that email.");
       } else if (e.code == 'wrong-password') {
         Navigator.of(context).pop();
-        snackBarMessage("Wrong password provided for that user.", context);
+        snackBarMessage("Wrong password provided for that user.");
       }
     } catch (e) {
       fAuth.signOut;
-      snackBarMessage(e.toString(), context);
+      snackBarMessage(e.toString());
     }
   }
 

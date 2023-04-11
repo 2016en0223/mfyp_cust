@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mfyp_cust/includes/utilities/button.util.dart';
 import 'package:mfyp_cust/includes/utilities/colors.dart';
 
@@ -60,27 +61,13 @@ class MFYPDialogAction extends StatelessWidget {
     );
   }
 }
-snackBarMessage(String message, [ctx]) {
-  SnackBar snackBar = SnackBar(
-    duration: const Duration(milliseconds: 1000),
-    closeIconColor: Colors.white,
-    showCloseIcon: true,
-    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-    behavior: SnackBarBehavior.floating,
-    dismissDirection: DismissDirection.endToStart,
-    margin: EdgeInsets.only(
-        right: MediaQuery.of(ctx).size.width * 0.1,
-        left: MediaQuery.of(ctx).size.width * 0.1,
-        bottom: MediaQuery.of(ctx).size.height * 0.1),
-    elevation: 15,
-    backgroundColor: const Color.fromARGB(101, 1, 97, 112),
-    content: Text(
-      message,
-      textAlign: TextAlign.center,
-      overflow: TextOverflow.clip,
-      softWrap: true,
-      style: const TextStyle(fontSize: 12),
-    ),
-  );
-  return ScaffoldMessenger.of(ctx).showSnackBar(snackBar);
+snackBarMessage(String message, [ToastGravity? gravity]) {
+  Fluttertoast.showToast(
+      msg: message,
+      toastLength: Toast.LENGTH_SHORT,
+      gravity: gravity ?? ToastGravity.TOP,
+      timeInSecForIosWeb: 1,
+      backgroundColor: const Color.fromARGB(142, 0, 0, 0),
+      textColor: Colors.white,
+      fontSize: 16.0);
 }

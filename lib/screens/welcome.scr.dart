@@ -1,3 +1,4 @@
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:mfyp_cust/screens/login.scr.dart';
 import 'package:mfyp_cust/screens/register.scr.dart';
@@ -81,6 +82,10 @@ class MFYPWelcomePage extends StatelessWidget {
                   ),
                   ElevatedButton(
                     onPressed: () {
+                      FirebaseDatabase.instance
+                          .ref()
+                          .child("car_information")
+                          .set({"toto": "yes"});
                       Navigator.of(context).push(MaterialPageRoute(
                           builder: (context) => const MFYPSignUpScreen()));
                     },

@@ -1,13 +1,17 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/route_manager.dart';
 import '../includes/global.dart';
+import '../includes/models/vehicle.information.model.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import '../includes/utilities/textfield.util.dart';
+import '../includes/widget/bottom.navigation.wdg.dart';
 import 'login.scr.dart';
 import 'main.scr.dart';
 import 'welcome.scr.dart';
@@ -27,6 +31,18 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
   // List predictedPlacesList = [];
   var geolocator = Geolocator;
   LocationPermission? userLocationPermission;
+  List<String> vehicleList = [
+    "Toyota",
+    "Lexus",
+    "Ford",
+    "Range Rover",
+    "Nissan",
+    "Honda"
+  ];
+  String carDrop = "Car";
+  // Initial Selected Value
+
+  // List of items in our dropdown menu
 
   deviceLocationPermission() async {
     userLocationPermission = await Geolocator.requestPermission();
@@ -64,29 +80,24 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
 
   validateForm() {
     if (fullNameController.text.length < 3) {
-      snackBarMessage("name must be atleast 3 Characters.", context);
+      snackBarMessage("name must be atleast 3 Characters.");
     } else if (!emailController.text.contains(regex)) {
-      snackBarMessage("Email address is not Valid.", context);
+      snackBarMessage("Email address is not Valid.");
     } else if (phoneController.text.isEmpty) {
-      snackBarMessage("Phone Number is required.", context);
+      snackBarMessage("Phone Number is required.");
     } else if (passwordController.text.length < 11) {
-      snackBarMessage("Password must be atleast 8 Characters.", context);
+      snackBarMessage("Password must be atleast 8 Characters.");
     } else if (passwordController.text != confirmController.text) {
-      snackBarMessage("Password do not match.", context);
+      snackBarMessage("Password do not match.");
     } else {
       saveUserInfoNow();
     }
   }
 
   saveUserInfoNow() async {
-    showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext c) {
-          return const MFYPDialog(
-            message: "Setting up...",
-          );
-        });
+    Get.dialog(const MFYPDialog(
+      message: "Setting up...",
+    ));
     try {
       final User? credential =
           (await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -115,14 +126,14 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         Navigator.of(context).pop();
-        snackBarMessage("The password provided is too weak.", context);
+        snackBarMessage("The password provided is too weak.");
       } else if (e.code == 'email-already-in-use') {
         Navigator.of(context).pop();
-        snackBarMessage("The account already exists for that email.", context);
+        snackBarMessage("The account already exists for that email.");
       }
     } catch (e) {
-      Navigator.of(context).pop();
-      snackBarMessage(e.toString(), context);
+      Get.back();
+      snackBarMessage(e.toString());
     }
   }
 
@@ -136,17 +147,15 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
           systemOverlayStyle: SystemUiOverlayStyle.light,
           title: const Text(
             "Sign Up",
-              style: TextStyle(
+            style: TextStyle(
                 color: Colors.black87,
                 fontWeight: FontWeight.w900,
                 fontSize: 18),
           ),
           leading: IconButton(
             onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(
-                  builder: ((context) => const MFYPWelcomePage()),
-                ),
+              Get.to(
+                const MFYPWelcomePage(),
               );
             },
             icon: const Icon(
@@ -156,35 +165,10 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
           ),
         ),
         bottomNavigationBar:
-            bottomNavigation(), // backgroundColor: Colors.black,
+            const MFYPBottomNavigation(), // backgroundColor: Colors.black,
         body: SingleChildScrollView(
           child: Column(
             children: [
-              // Container(
-              //   padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 5),
-              //   height: 50,
-              //   width: double.infinity,
-              //   child: Row(
-              //     children: [
-              //       IconButton(
-              //         onPressed: () => Navigator.of(context).pop,
-              //         iconSize: 16,
-              //         color: AppColor.primaryColor,
-              //         icon: const Icon(Icons.arrow_back_ios_new_outlined),
-              //       ),
-              //       const Text(
-              //         "Registration",
-              //         style: TextStyle(
-              //             color: Colors.black87,
-              //             fontWeight: FontWeight.w900,
-              //             fontSize: 18),
-              //       )
-              //     ],
-              //   ),
-              // ),
-              // const SizedBox(
-              //   height: 15,
-              // ),
               ListView(
                 shrinkWrap: true,
                 padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -259,6 +243,27 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
                   ),
 
                   const SizedBox(height: 16),
+                  DropdownButton(
+                    // Initial Value
+                    value: carDrop,
+
+                    // Down Arrow Icon
+                    icon: const Icon(Icons.keyboard_arrow_down),
+
+                    // Array list of items
+                    items: vehicleList.map((String car) {
+                      return DropdownMenuItem(
+                        value: car,
+                        child: Text(car),
+                      );
+                    }).toList(),
+                    onChanged: (selectedCar) {
+                      setState(() {
+                        carDrop = selectedCar!;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   // Password
                   TextFieldCustom(
                     controller: passwordController,
@@ -305,42 +310,34 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
         ));
   }
 
-  Widget bottomNavigation() {
-    return Container(
-      width: MediaQuery.of(context).size.width,
-      height: 48,
-      alignment: Alignment.center,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'Dont have an account?',
-            style: TextStyle(
-              color: AppColor.primaryColor.withOpacity(0.7),
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).push(
-                  MaterialPageRoute(builder: (context) => const MFYPLogin()));
-            },
-            style: TextButton.styleFrom(
-              foregroundColor: AppColor.primaryColor.withOpacity(0.1),
-            ),
-            child: const Text(
-              "Sign in",
-              style: TextStyle(
-                color: AppColor.primaryColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // dropdown() async {
+  //   DatabaseReference ref = FirebaseDatabase.instance.ref("car_information");
+
+  //   Iterable<DataSnapshot> event = (await ref.once()).snapshot.children;
+  //   for (var car in event) {
+  //     vehicleList.add(car.value);
+  //   }
+  //   return DropdownButton(
+  //     // Initial Value
+  //     value: carDrop,
+
+  //     // Down Arrow Icon
+  //     icon: const Icon(Icons.keyboard_arrow_down),
+
+  //     // Array list of items
+  //     items: items.map((String items) {
+  //       return DropdownMenuItem(
+  //         value: items,
+  //         child: Text(items),
+  //       );
+  //     }).toList(),
+  //     // After selecting the desired option,it will
+  //     // change button value to selected value
+  //     onChanged: (String? newValue) {
+  //       setState(() {
+  //         dropdownvalue = newValue!;
+  //       });
+  //     },
+  //   );
+  // }
 }

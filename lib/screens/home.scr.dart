@@ -9,6 +9,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_geofire/flutter_geofire.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/route_manager.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:material_dialogs/material_dialogs.dart';
 import 'package:material_dialogs/shared/types.dart';
@@ -60,6 +61,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   bool activeProviderLoadedKey = false;
   List<ActiveProviderModel> nearbyActiveSPList = [];
   BitmapDescriptor? activeNearbyIcon;
+  bool option = false;
 
 //-----------------------------------End-----------------------------------------
 
@@ -207,7 +209,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                           .techSPLocation ==
                       null) {
                     snackBarMessage(
-                        "Select the nearest provider to proceed.", context);
+                        "Select the nearest provider to proceed.");
                   } else {
                     showModalBottomSheet(
                       shape: const RoundedRectangleBorder(
@@ -286,13 +288,11 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         LatLng(userPosition!.locationLat!, userPosition.locationLong!);
     LatLng techSPLatLng =
         LatLng(techPosition!.locationLat!, techPosition.locationLong!);
-    showDialog(
-        context: context,
-        builder: (BuildContext context) =>
-            const MFYPDialog(message: "Please wait..."));
+    Get.dialog(const MFYPDialog(message: "Please wait..."));
+    
     var getEncodedPoint =
         await getEncodedPointsFromProviderToUser(userLatLng, techSPLatLng);
-    Navigator.of(context).pop();
+    Get.back();
 
     PolylinePoints points = PolylinePoints();
     List<PointLatLng> decodedpoints =
@@ -444,7 +444,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                     currentUserModelLocal =
                         UserModel.fromSnapshot(data.snapshot);
                   });
-                  Dialogs.materialDialog(
+                  Get.dialog(Dialogs.materialDialog(
                       barrierDismissible: false,
                       barrierColor: Colors.transparent,
                       color: Colors.white,
@@ -569,7 +569,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                           text: "Select",
                           fontSize: 14,
                         ),
-                      ]);
+                      ]) as Widget);
                 }),
           );
           providerSet.add(providerMarker);
@@ -597,7 +597,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       "longitude": providerLocation.locationLong.toString(),
     };
 
-    Map locationMap = {
+    Map userMeetTheProviderMap = {
       "destination": userLocationMap,
       "origin": providerLocationMap,
       "time": DateTime.now().toString(),
@@ -606,7 +606,20 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       "originAddress": userLocation.locationName,
       "destinationAddress": providerLocation.locationName,
     };
-    prequest!.set(locationMap);
+
+    Map providerMeetTheUser = {
+      "destination": userLocationMap,
+      "origin": providerLocationMap,
+      "time": DateTime.now().toString(),
+      "fullName": currentUserModel!.fullName,
+      "phone": currentUserModel!.phone,
+      "originAddress": userLocation.locationName,
+      "destinationAddress": providerLocation.locationName,
+    };
+    option
+        ? prequest!.set(userMeetTheProviderMap)
+        : prequest!.set(providerMeetTheUser);
+    
     String providerID =
         context.read<MFYPUserInfo>().techSPLocation!.providerID.toString();
 
@@ -621,7 +634,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         .child("status")
         .set(prequest!.key!);
 
-        Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => MFYP))
+    // Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => MFYPA))
   }
 
 //-----------------------------------End-----------------------------------------

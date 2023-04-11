@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/route_manager.dart';
 import 'package:mfyp_cust/includes/api_key.dart';
 import 'package:mfyp_cust/includes/handlers/user.info.handler.provider.dart';
 import 'package:mfyp_cust/includes/models/location.direction.model.dart';
@@ -23,7 +24,7 @@ class MFYPListView extends StatelessWidget {
     String placeDetailsURL =
         "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeID&key=$apiKey";
     var urlRequest = await Request.requestURL(placeDetailsURL);
-    Navigator.of(context).pop();
+    Get.back();
     if (urlRequest["status"] == "OK") {
       LocationDirection userDirection = LocationDirection();
 
@@ -35,7 +36,7 @@ class MFYPListView extends StatelessWidget {
       userDirection.placeID = placeID;
       Provider.of<MFYPUserInfo>(context, listen: false)
           .getProviderLatLng(userDirection);
-      Navigator.pop(context, "Home");
+      Get.back(result: "Home");
     }
   }
 
