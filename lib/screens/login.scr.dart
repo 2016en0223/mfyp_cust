@@ -4,13 +4,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/route_manager.dart';
 import '../includes/global.dart';
 import '../includes/models/user.mixin.model.dart';
-import '../includes/models/user.model.inc.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import '../includes/utilities/textfield.util.dart';
-import 'home.scr.dart';
 import 'main.scr.dart';
 import 'register.scr.dart';
 import 'welcome.scr.dart';
@@ -35,17 +34,14 @@ class MFYPLoginState extends State<MFYPLogin> {
         elevation: 0,
         title: const Text(
           'Sign In',
-            style: TextStyle(
+          style: TextStyle(
               color: Colors.black87, fontWeight: FontWeight.w900, fontSize: 18),
         ),
         leading: IconButton(
           onPressed: () {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(
-                builder: ((context) => const MFYPWelcomePage()),
-              ),
-            );
-            ;
+            Get.to(const MFYPWelcomePage());
+            
+            
           },
           icon: const Icon(
             Icons.arrow_back_ios_new_outlined,
@@ -76,7 +72,6 @@ class MFYPLoginState extends State<MFYPLogin> {
             margin: const EdgeInsets.only(bottom: 32),
             child: const Text(
               "This page enables registered user to sign in into the project!",
-             
               style: TextStyle(
                   color: Colors.black87, fontSize: 12, height: 150 / 100),
             ),
@@ -114,7 +109,6 @@ class MFYPLoginState extends State<MFYPLogin> {
           // Sign In button
           ElevatedButton(
             onPressed: () {
-              
               validate();
             },
             style: ElevatedButton.styleFrom(
@@ -180,8 +174,7 @@ class MFYPLoginState extends State<MFYPLogin> {
           }
           Future.delayed(
               const Duration(milliseconds: 2000),
-              () => Navigator.of(context).pushReplacement(MaterialPageRoute(
-                  builder: (context) => const MFYPMainScreen())));
+              () => Get.to(() => const MFYPMainScreen()));
         });
       }
     } on FirebaseAuthException catch (e) {
@@ -217,8 +210,7 @@ class MFYPLoginState extends State<MFYPLogin> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const MFYPSignUpScreen()));
+              Get.to(() => const MFYPSignUpScreen());
             },
             style: TextButton.styleFrom(
               foregroundColor: AppColor.primaryColor.withOpacity(0.1),
@@ -234,12 +226,6 @@ class MFYPLoginState extends State<MFYPLogin> {
           ),
         ],
       ),
-        
-            
-            
-        
-        
-      
     );
   }
 }

@@ -208,8 +208,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                   if (Provider.of<MFYPUserInfo>(context, listen: false)
                           .techSPLocation ==
                       null) {
-                    snackBarMessage(
-                        "Select the nearest provider to proceed.");
+                    snackBarMessage("Select the nearest provider to proceed.");
                   } else {
                     showModalBottomSheet(
                       shape: const RoundedRectangleBorder(
@@ -288,12 +287,14 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         LatLng(userPosition!.locationLat!, userPosition.locationLong!);
     LatLng techSPLatLng =
         LatLng(techPosition!.locationLat!, techPosition.locationLong!);
-    Get.dialog(const MFYPDialog(message: "Please wait..."));
-    
+    showDialog(
+        context: context,
+        builder: (ctx) => const MFYPDialog(message: "Please wait..."));
+ 
+
     var getEncodedPoint =
         await getEncodedPointsFromProviderToUser(userLatLng, techSPLatLng);
-    Get.back();
-
+    Navigator.of(context).pop();
     PolylinePoints points = PolylinePoints();
     List<PointLatLng> decodedpoints =
         points.decodePolyline(getEncodedPoint!.polylinePoints!);
@@ -563,7 +564,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                               markerSet.clear();
                               markerSet.add(selectedProviderMarker);
                             });
-                            Navigator.pop(context);
+                            Navigator.of(context).pop();
                             drawPolylines();
                           },
                           text: "Select",
@@ -619,7 +620,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     option
         ? prequest!.set(userMeetTheProviderMap)
         : prequest!.set(providerMeetTheUser);
-    
+
     String providerID =
         context.read<MFYPUserInfo>().techSPLocation!.providerID.toString();
 
@@ -633,8 +634,6 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         .child(selectedProviderID)
         .child("status")
         .set(prequest!.key!);
-
-    // Navigator.of(context).push(MaterialPageRoute(builder: (ctx) => MFYPA))
   }
 
 //-----------------------------------End-----------------------------------------

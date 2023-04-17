@@ -19,7 +19,7 @@ class PolylinePoints {
   ///
   Future<PolylineResult> getRouteBetweenCoordinates(
       String googleApiKey, PointLatLng origin, PointLatLng destination,
-      {TravelMode travelMode = TravelMode.driving,
+      {TravelMode travelMode = TravelMode.walking,
       List<PolylineWayPoint> wayPoints = const [],
       bool avoidHighways = false,
       bool avoidTolls = false,

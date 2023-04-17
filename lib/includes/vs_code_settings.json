@@ -101,3 +101,66 @@
     "editor.stickyScroll.enabled": true,
     "dart.hotReloadOnSave": "allIfDirty"
 }
+
+
+
+
+StreamBuilder(
+                    stream: FirebaseDatabase.instance
+                        .ref("car_information")
+                        .onValue,
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const Text("Car Loading");
+    } else {
+                        
+                        for (int i = 0;
+                            i < snapshot.data!.snapshot.children.length;
+                            i++) {
+                              vehicleList.clear();
+                          dynamic snap =
+                              ((snapshot.data!.snapshot.value as List)[i
+            ]);
+                          vehicleList.add(
+                            DropdownMenuItem(value: snap, child: Text(snap)),
+                          );
+        }
+                        return DropdownButton(
+                          icon: const Icon(Icons.keyboard_arrow_down),
+                          items: vehicleList,
+                          onChanged: (capture) =>
+                              setState(() => carDrop = capture),
+                          isExpanded: true,
+                          hint: const Text("Select"),
+                        );
+    }
+},
+                  ),
+
+                  builder: (context, snapshot) {
+                      var data = (snapshot.data!.snapshot.value as List);
+                      print(data);
+                      if (!(snapshot.hasData &&
+                          snapshot.connectionState == ConnectionState.active &&
+                          snapshot.data != null)) {
+                        return const Text("Hello");
+    } else {
+                        
+                        for (int i = 0; i < data.length; i++) {
+                          String data2String = data[i
+            ];
+                          vehicleList.add(DropdownMenuItem<String>(
+                              value: data2String, child: Text(data2String)));
+        }
+    }
+                      return DropdownButton(
+                        icon: const Icon(Icons.keyboard_arrow_down),
+                        items: vehicleList,
+                        onChanged: (capturedData) => setState(() {
+                          carDrop = capturedData as String;
+    }),
+                        value: carDrop,
+                        isExpanded: true,
+                        hint: const Text("Select"),
+                      );
+},

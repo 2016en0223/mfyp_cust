@@ -1,5 +1,10 @@
-class VehicleInformation {
-  String? carType, carBrand;
+import 'package:firebase_database/firebase_database.dart';
 
-  VehicleInformation({this.carType, this.carBrand});
+class VehicleInformation {
+  String? carName;
+
+  VehicleInformation({this.carName});
+  VehicleInformation.fromJson(DataSnapshot snapshot) {
+    carName = (snapshot.value as dynamic)["toto"];
+  }
 }

@@ -31,18 +31,10 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
   // List predictedPlacesList = [];
   var geolocator = Geolocator;
   LocationPermission? userLocationPermission;
-  List<String> vehicleList = [
-    "Toyota",
-    "Lexus",
-    "Ford",
-    "Range Rover",
-    "Nissan",
-    "Honda"
-  ];
-  String carDrop = "Car";
-  // Initial Selected Value
 
   // List of items in our dropdown menu
+  String? carDrop;
+  List<DropdownMenuItem> vehicleList = [];
 
   deviceLocationPermission() async {
     userLocationPermission = await Geolocator.requestPermission();
@@ -79,14 +71,23 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
   }
 
   validateForm() {
-    if (fullNameController.text.length < 3) {
-      snackBarMessage("name must be atleast 3 Characters.");
+    if (fullNameController.text.isEmpty &&
+        emailController.text.isEmpty &&
+        phoneController.text.isEmpty &&
+        passwordController.text.isEmpty &&
+        confirmController.text.isEmpty &&
+        carDrop!.isEmpty) {
+      snackBarMessage("No input.");
+    } else if (fullNameController.text.length < 3) {
+      snackBarMessage("Name must be atleast 3 Characters.");
     } else if (!emailController.text.contains(regex)) {
       snackBarMessage("Email address is not Valid.");
     } else if (phoneController.text.isEmpty) {
       snackBarMessage("Phone Number is required.");
     } else if (passwordController.text.length < 11) {
       snackBarMessage("Password must be atleast 8 Characters.");
+    } else if (carDrop!.isEmpty) {
+      snackBarMessage("No speciality selected");
     } else if (passwordController.text != confirmController.text) {
       snackBarMessage("Password do not match.");
     } else {
@@ -114,21 +115,21 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
           "phone": phoneController.text.trim(),
           "latitude": userCurrentPosition!.latitude.toString(),
           "longitude": userCurrentPosition!.longitude.toString(),
+          "carSpec": carDrop
         };
         userRef = FirebaseDatabase.instance.ref().child("users");
         userRef!.child(credential.uid).set(credentialMap);
         Future.delayed(const Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-          Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (ctx) => const MFYPMainScreen()));
+          Get.back();
+          Get.off(const MFYPMainScreen());
         });
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
-        Navigator.of(context).pop();
+        Get.back();
         snackBarMessage("The password provided is too weak.");
       } else if (e.code == 'email-already-in-use') {
-        Navigator.of(context).pop();
+        Get.back();
         snackBarMessage("The account already exists for that email.");
       }
     } catch (e) {
@@ -243,26 +244,8 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
                   ),
 
                   const SizedBox(height: 16),
-                  DropdownButton(
-                    // Initial Value
-                    value: carDrop,
-
-                    // Down Arrow Icon
-                    icon: const Icon(Icons.keyboard_arrow_down),
-
-                    // Array list of items
-                    items: vehicleList.map((String car) {
-                      return DropdownMenuItem(
-                        value: car,
-                        child: Text(car),
-                      );
-                    }).toList(),
-                    onChanged: (selectedCar) {
-                      setState(() {
-                        carDrop = selectedCar!;
-                      });
-                    },
-                  ),
+                  dropdown("Unavailable, please connect to the internet",
+                      "Select your specialisation", "Unavailable"),
                   const SizedBox(height: 16),
                   // Password
                   TextFieldCustom(
@@ -310,34 +293,59 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
         ));
   }
 
-  // dropdown() async {
-  //   DatabaseReference ref = FirebaseDatabase.instance.ref("car_information");
-
-  //   Iterable<DataSnapshot> event = (await ref.once()).snapshot.children;
-  //   for (var car in event) {
-  //     vehicleList.add(car.value);
-  //   }
-  //   return DropdownButton(
-  //     // Initial Value
-  //     value: carDrop,
-
-  //     // Down Arrow Icon
-  //     icon: const Icon(Icons.keyboard_arrow_down),
-
-  //     // Array list of items
-  //     items: items.map((String items) {
-  //       return DropdownMenuItem(
-  //         value: items,
-  //         child: Text(items),
-  //       );
-  //     }).toList(),
-  //     // After selecting the desired option,it will
-  //     // change button value to selected value
-  //     onChanged: (String? newValue) {
-  //       setState(() {
-  //         dropdownvalue = newValue!;
-  //       });
-  //     },
-  //   );
-  // }
+  dropdown(String nosnapshot, String hint, String disabledHint) {
+    return StreamBuilder(
+      stream: FirebaseDatabase.instance.ref("car_information").onValue,
+      builder: (context, snapshot) {
+        if (!(snapshot.hasData)) {
+          return const Text("Car Loading");
+        } else {
+          vehicleList.clear();
+          for (int i = 0; i < snapshot.data!.snapshot.children.length; i++) {
+            dynamic snap =
+                ((snapshot.data!.snapshot.value as List)[i].toString());
+            vehicleList.add(
+              DropdownMenuItem(value: snap, child: Text(snap)),
+            );
+          }
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            decoration: BoxDecoration(
+                border: Border.all(color: AppColor.textFieldColor, width: 1),
+                color: AppColor.primarySoft,
+                borderRadius: BorderRadius.circular(8)),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.car_repair_outlined,
+                  color: AppColor.primaryColor,
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: DropdownButton(
+                    dropdownColor: AppColor.primarySoft,
+                    focusColor: AppColor.primarySoft,
+                    style: const TextStyle(color: Colors.black87, fontSize: 16),
+                    icon: const Icon(Icons.keyboard_arrow_down),
+                    items: vehicleList,
+                    onChanged: (capture) => setState(() {
+                      carDrop = capture;
+                    }),
+                    isExpanded: true,
+                    isDense: true,
+                    value: carDrop,
+                    hint: Text(hint),
+                    disabledHint: Text(disabledHint),
+                    underline: Container(),
+                    iconEnabledColor: AppColor.primaryColor,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+      },
+    );
+  }
 }

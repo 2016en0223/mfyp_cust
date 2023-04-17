@@ -2,8 +2,8 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:mfyp_cust/includes/utilities/colors.dart';
-import 'package:mfyp_cust/screens/main.scr.dart';
 import 'package:mfyp_cust/screens/welcome.scr.dart';
 import 'package:provider/provider.dart';
 import 'package:shirne_dialog/shirne_dialog.dart';
@@ -26,7 +26,7 @@ void main() async {
     MyApp(
       child: ChangeNotifierProvider(
         create: (context) => MFYPUserInfo(),
-        child: MaterialApp(
+        child: GetMaterialApp(
           title: 'Drivers App',
           navigatorKey: MyDialog.navigatorKey,
           localizationsDelegates: const [
@@ -38,6 +38,7 @@ void main() async {
             GlobalCupertinoLocalizations.delegate,
           ],
           theme: ThemeData(
+            useMaterial3: true,
             primarySwatch: Colors.cyan,
             fontFamily: "SanFrancisco",
           ),

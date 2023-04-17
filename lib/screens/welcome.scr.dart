@@ -1,5 +1,6 @@
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:get/route_manager.dart';
 import 'package:mfyp_cust/screens/login.scr.dart';
 import 'package:mfyp_cust/screens/register.scr.dart';
 
@@ -82,12 +83,12 @@ class MFYPWelcomePage extends StatelessWidget {
                   ),
                   ElevatedButton(
                     onPressed: () {
-                      FirebaseDatabase.instance
-                          .ref()
-                          .child("car_information")
-                          .set({"toto": "yes"});
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const MFYPSignUpScreen()));
+                      // FirebaseDatabase.instance
+                      //     .ref()
+                      //     .child("car_information")
+                      //     .set({"0": "yes", "1": "hi", "2": "What"});
+                      Get.to(() => const MFYPSignUpScreen()); 
+                      
                     },
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
