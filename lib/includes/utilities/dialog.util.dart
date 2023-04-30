@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:mfyp_cust/includes/utilities/button.util.dart';
+import 'package:get/get.dart';
 import 'package:mfyp_cust/includes/utilities/colors.dart';
+
+import '../global.dart';
 
 class MFYPDialog extends StatelessWidget {
   final String message;
@@ -61,13 +63,34 @@ class MFYPDialogAction extends StatelessWidget {
     );
   }
 }
-snackBarMessage(String message, [ToastGravity? gravity]) {
-  Fluttertoast.showToast(
+snackBarMessage(String message, [Color? textColor, ToastGravity? gravity]) {
+  return Fluttertoast.showToast(
       msg: message,
       toastLength: Toast.LENGTH_SHORT,
-      gravity: gravity ?? ToastGravity.TOP,
+      gravity: gravity ?? ToastGravity.CENTER,
       timeInSecForIosWeb: 1,
       backgroundColor: const Color.fromARGB(142, 0, 0, 0),
-      textColor: Colors.white,
+      textColor: textColor ?? Colors.white,
       fontSize: 16.0);
+}
+
+snackGet(String title, String message) {
+  return Get.snackbar(title, message,
+      messageText: Text(
+        title,
+        style: const TextStyle(color: Colors.white),
+      ),
+      titleText: Text(
+        title,
+        style: const TextStyle(
+            color: Colors.white, fontWeight: FontWeight.w900, fontSize: 20),
+      ),
+      margin: EdgeInsets.only(
+          top: radi.snackbarPosition(80, "Height"),
+          right: radi.snackbarPosition(20, "Width"),
+          left: radi.snackbarPosition(20, "Width")),
+      colorText: Colors.white,
+      duration: const Duration(milliseconds: 1500),
+      shouldIconPulse: true,
+      backgroundColor: const Color.fromARGB(120, 0, 0, 0));
 }

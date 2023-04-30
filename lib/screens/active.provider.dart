@@ -5,6 +5,7 @@ import 'package:mfyp_cust/includes/global.dart';
 import 'package:mfyp_cust/includes/utilities/colors.dart';
 import 'package:smooth_star_rating_null_safety/smooth_star_rating_null_safety.dart';
 
+// ignore: must_be_immutable
 class MFYPActiveProvider extends StatefulWidget {
   DatabaseReference? request;
 

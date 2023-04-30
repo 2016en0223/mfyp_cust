@@ -4,7 +4,9 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:get/get.dart';
 import 'package:get/route_manager.dart';
+import 'package:mfyp_cust/includes/utilities/dimension.util.dart';
 import '../includes/global.dart';
 import '../includes/models/user.mixin.model.dart';
 import '../includes/utilities/colors.dart';
@@ -40,8 +42,6 @@ class MFYPLoginState extends State<MFYPLogin> {
         leading: IconButton(
           onPressed: () {
             Get.to(const MFYPWelcomePage());
-            
-            
           },
           icon: const Icon(
             Icons.arrow_back_ios_new_outlined,
@@ -109,6 +109,16 @@ class MFYPLoginState extends State<MFYPLogin> {
           // Sign In button
           ElevatedButton(
             onPressed: () {
+              Get.snackbar("Info", "Content of our message",
+                  margin: EdgeInsets.only(
+                      top: radi.snackbarPosition(80, "Height"),
+                      right: radi.snackbarPosition(20, "Width"),
+                      left: radi.snackbarPosition(20, "Width")),
+                  colorText: Colors.white,
+                  duration: const Duration(milliseconds: 1500),
+                  icon: const Icon(Icons.close_outlined),
+                  shouldIconPulse: true,
+                  backgroundColor: const Color.fromARGB(99, 0, 0, 0));
               validate();
             },
             style: ElevatedButton.styleFrom(
@@ -172,14 +182,15 @@ class MFYPLoginState extends State<MFYPLogin> {
           if (data.snapshot.value != null) {
             UserMixin.readUserInfo();
           }
-          Future.delayed(
-              const Duration(milliseconds: 2000),
-              () => Get.to(() => const MFYPMainScreen()));
+          Future.delayed(const Duration(milliseconds: 2000), () {
+            Get.back();
+            Get.to(() => const MFYPMainScreen());
+          });
         });
       }
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
-        Navigator.of(context).pop();
+        Get.back();
         snackBarMessage("No user found for that email.");
       } else if (e.code == 'wrong-password') {
         Navigator.of(context).pop();

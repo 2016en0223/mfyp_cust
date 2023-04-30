@@ -1,7 +1,4 @@
 import 'package:flutter/foundation.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:mfyp_cust/includes/mixins/service.provider.mixin.dart';
-import 'package:mfyp_cust/includes/models/activeprovider.model.dart';
 import 'package:mfyp_cust/includes/models/user.model.inc.dart';
 
 import '../models/location.direction.model.dart';

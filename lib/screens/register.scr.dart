@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -6,13 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/route_manager.dart';
 import '../includes/global.dart';
-import '../includes/models/vehicle.information.model.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import '../includes/utilities/textfield.util.dart';
 import '../includes/widget/bottom.navigation.wdg.dart';
-import 'login.scr.dart';
 import 'main.scr.dart';
 import 'welcome.scr.dart';
 
@@ -54,6 +51,7 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
   @override
   void initState() {
     super.initState();
+    _streamData();
     deviceLocationPermission();
   }
 
@@ -115,7 +113,7 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
           "phone": phoneController.text.trim(),
           "latitude": userCurrentPosition!.latitude.toString(),
           "longitude": userCurrentPosition!.longitude.toString(),
-          "carSpec": carDrop
+          "carType": carDrop
         };
         userRef = FirebaseDatabase.instance.ref().child("users");
         userRef!.child(credential.uid).set(credentialMap);
@@ -295,15 +293,39 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
 
   dropdown(String nosnapshot, String hint, String disabledHint) {
     return StreamBuilder(
-      stream: FirebaseDatabase.instance.ref("car_information").onValue,
+      stream: _streamData(),
       builder: (context, snapshot) {
         if (!(snapshot.hasData)) {
-          return const Text("Car Loading");
+          return Container(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 14),
+            decoration: BoxDecoration(
+                border: Border.all(color: AppColor.textFieldColor, width: 1),
+                color: AppColor.primarySoft,
+                borderRadius: BorderRadius.circular(8)),
+            child: Row(
+              mainAxisAlignment: !(snapshot.hasData)
+                  ? MainAxisAlignment.start
+                  : MainAxisAlignment.center,
+              children: const [
+                Icon(
+                  Icons.car_repair_outlined,
+                  color: AppColor.primaryColor,
+                ),
+                SizedBox(width: 8),
+                Text(
+                  "Loading...",
+                  style: TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                )
+              ],
+            ),
+          );
         } else {
           vehicleList.clear();
           for (int i = 0; i < snapshot.data!.snapshot.children.length; i++) {
-            dynamic snap =
-                ((snapshot.data!.snapshot.value as List)[i].toString());
+            var snap = ((snapshot.data!.snapshot.value as List)[i].toString());
             vehicleList.add(
               DropdownMenuItem(value: snap, child: Text(snap)),
             );
@@ -326,12 +348,13 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
                   child: DropdownButton(
                     dropdownColor: AppColor.primarySoft,
                     focusColor: AppColor.primarySoft,
-                    style: const TextStyle(color: Colors.black87, fontSize: 16),
+                    style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
                     icon: const Icon(Icons.keyboard_arrow_down),
                     items: vehicleList,
-                    onChanged: (capture) => setState(() {
-                      carDrop = capture;
-                    }),
+                    onChanged: (capture) => setState(() => carDrop = capture),
                     isExpanded: true,
                     isDense: true,
                     value: carDrop,
@@ -347,5 +370,9 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
         }
       },
     );
+  }
+
+  Stream<DatabaseEvent> _streamData() {
+    return FirebaseDatabase.instance.ref("car_information").onValue;
   }
 }

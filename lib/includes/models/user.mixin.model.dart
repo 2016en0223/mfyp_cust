@@ -12,8 +12,6 @@ class UserMixin {
     databaseReference!.child(currentFirebaseUser!.uid).once().then((snapped) {
       if (snapped.snapshot.value != null) {
         currentUserModel = UserModel.fromSnapshot(snapped.snapshot);
-        print("Is this working?");
-        print(currentUserModel!.fullName);
       }
     });
   }

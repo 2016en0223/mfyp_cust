@@ -2,7 +2,6 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
-import 'package:adaptive_dialog/adaptive_dialog.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -15,11 +14,8 @@ import 'package:material_dialogs/material_dialogs.dart';
 import 'package:material_dialogs/shared/types.dart';
 import 'package:mfyp_cust/includes/mixins/reverse.geocoding.mixin.dart';
 import 'package:mfyp_cust/includes/models/location.direction.model.dart';
-import 'package:mfyp_cust/screens/history.scr.dart';
-import 'package:mfyp_cust/screens/main.scr.dart';
 import 'package:provider/provider.dart';
-import 'package:quickalert/quickalert.dart';
-import 'package:shirne_dialog/shirne_dialog.dart';
+import '../includes/assistants/send.fcm.assistant.dart';
 import '../includes/global.dart';
 import '../includes/handlers/user.info.handler.provider.dart';
 import '../includes/mixins/service.provider.mixin.dart';
@@ -30,8 +26,7 @@ import '../includes/assistants/get.encoded.points.assistant.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
-import '../main.dart';
-import 'active.provider.dart';
+import '../includes/utilities/dimension.util.dart';
 import 'login.scr.dart';
 import 'search.scr.dart';
 
@@ -62,6 +57,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   List<ActiveProviderModel> nearbyActiveSPList = [];
   BitmapDescriptor? activeNearbyIcon;
   bool option = false;
+  Dimension radi = Dimension();
+  AutomateFCM automateFCM = AutomateFCM();
 
 //-----------------------------------End-----------------------------------------
 
@@ -111,20 +108,17 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         });
       });
   requestUI() {
-    double height = MediaQuery.of(context).size.height * 0.25;
-    double width = MediaQuery.of(context).size.width * 0.1;
-    double widthSubmit = MediaQuery.of(context).size.width * 0.06;
     return Positioned(
       bottom: 0,
       right: 0,
       left: 0,
       child: Container(
-        height: height,
+        height: Dimension.screenHeight * 0.25,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        decoration: const BoxDecoration(
+        decoration: BoxDecoration(
           borderRadius: BorderRadius.only(
-            topRight: Radius.circular(25),
-            topLeft: Radius.circular(25),
+            topRight: Radius.circular(radi.radiusFx(20)),
+            topLeft: Radius.circular(radi.radiusFx(25)),
           ),
           color: AppColor.backgroundColor,
         ),
@@ -194,7 +188,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
               ],
             ),
             Padding(
-              padding: EdgeInsets.only(left: width, right: widthSubmit),
+              padding: EdgeInsets.only(
+                  left: Dimension.screenWidth * 0.1,
+                  right: Dimension.screenWidth * 0.06),
               child: const Divider(
                 thickness: 1,
                 color: AppColor.primaryColor,
@@ -211,9 +207,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                     snackBarMessage("Select the nearest provider to proceed.");
                   } else {
                     showModalBottomSheet(
-                      shape: const RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.vertical(top: Radius.circular(20))),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(radi.radiusFx(20)))),
                       backgroundColor: Colors.white,
                       elevation: 20,
                       context: context,
@@ -223,19 +219,19 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                             ListTile(
                                 leading: const Icon(Icons.library_add_outlined),
                                 title: const Text("Book Appointment"),
-                                onTap: () => Navigator.of(context).pop()),
+                                onTap: () => Get.back()),
                             ListTile(
                               leading: const Icon(Icons.car_repair_outlined),
                               title: const Text("On the go"),
                               onTap: () {
                                 saveRequestInfo();
-                                Navigator.of(context).pop();
+                                Get.back();
                               },
                             ),
                             ListTile(
                               leading: const Icon(Icons.close_outlined),
                               title: const Text("Cancel"),
-                              onTap: () => Navigator.of(context).pop(),
+                              onTap: () => Get.back(),
                             ),
                           ],
                         );
@@ -256,8 +252,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     currentFirebaseUser == null ? null : UserMixin.readUserInfo();
     Timer(const Duration(seconds: 3), () {
       if (currentFirebaseUser == null) {
-        Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (ctx) => const MFYPLogin()));
+        Get.off(() => const MFYPLogin());
       }
     });
   }
@@ -287,10 +282,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         LatLng(userPosition!.locationLat!, userPosition.locationLong!);
     LatLng techSPLatLng =
         LatLng(techPosition!.locationLat!, techPosition.locationLong!);
-    showDialog(
-        context: context,
-        builder: (ctx) => const MFYPDialog(message: "Please wait..."));
- 
+    Get.dialog(
+      const MFYPDialog(message: "Please wait..."),
+    );
 
     var getEncodedPoint =
         await getEncodedPointsFromProviderToUser(userLatLng, techSPLatLng);
@@ -475,14 +469,14 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                               height: 8,
                             ),
                             Row(
-                              children: const [
-                                Icon(Icons.location_on_outlined),
-                                SizedBox(
+                              children: [
+                                const Icon(Icons.location_on_outlined),
+                                const SizedBox(
                                   width: 8,
                                 ),
                                 Expanded(
                                   child: Text(
-                                    "Office Address",
+                                    currentUserModelLocal!.email!,
                                     softWrap: true,
                                     overflow: TextOverflow.visible,
                                   ),
@@ -534,7 +528,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                         MFYPTextButton(
                           text: "Back",
                           onPressed: (() {
-                            Navigator.of(context).pop();
+                            Get.back();
                           }),
                         ),
                         MFYPButton(
@@ -564,7 +558,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                               markerSet.clear();
                               markerSet.add(selectedProviderMarker);
                             });
-                            Navigator.of(context).pop();
+                            Get.back();
                             drawPolylines();
                           },
                           text: "Select",
@@ -604,6 +598,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       "time": DateTime.now().toString(),
       "fullName": currentUserModel!.fullName,
       "phone": currentUserModel!.phone,
+      "carType": currentUserModel!.carType,
       "originAddress": userLocation.locationName,
       "destinationAddress": providerLocation.locationName,
     };
@@ -624,16 +619,35 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     String providerID =
         context.read<MFYPUserInfo>().techSPLocation!.providerID.toString();
 
-    sendNotificationToProvider(providerID);
+    prepareNotificationToProvider(providerID);
   }
 
-  sendNotificationToProvider(String selectedProviderID) {
-    FirebaseDatabase.instance
+  prepareNotificationToProvider(String selectedProviderID) {
+    DatabaseReference ref = FirebaseDatabase.instance
         .ref()
         .child("providers")
-        .child(selectedProviderID)
-        .child("status")
-        .set(prequest!.key!);
+        .child(selectedProviderID);
+    ref.child("status").set(prequest!.key!);
+
+    /* This function send notification using Firebase Cloud Messaging */
+
+    ref.child("token").once().then((snapped) {
+      String snappedToken = snapped.snapshot.value.toString();
+      if (snappedToken.isNotEmpty) {
+        String deviceToken = snappedToken.toString();
+        String requestKey = prequest!.key.toString();
+        automateFCM.sendFCMNotificationGet(deviceToken, requestKey, context);
+        // AutomateFCM.sendFCMNotification(deviceToken, requestKey, context);
+        ref.child("status").onValue.listen((eventSnap) {
+          var eventValue = eventSnap.snapshot.value;
+          if (eventValue == "Idle") {
+            snackGet("Ops", "Request Cancelled.");
+          }
+        });
+      } else if (snappedToken.toString().isEmpty) {
+        snackGet("Message", "Request failed");
+      }
+    });
   }
 
 //-----------------------------------End-----------------------------------------

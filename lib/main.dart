@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:get/get_navigation/src/root/get_material_app.dart';
+import 'package:get/route_manager.dart';
 import 'package:mfyp_cust/includes/utilities/colors.dart';
 import 'package:mfyp_cust/screens/welcome.scr.dart';
 import 'package:provider/provider.dart';
@@ -29,14 +30,7 @@ void main() async {
         child: GetMaterialApp(
           title: 'Drivers App',
           navigatorKey: MyDialog.navigatorKey,
-          localizationsDelegates: const [
-            ShirneDialogLocalizations.delegate,
-
-            // flutter locals see [https://docs.flutter.dev/development/accessibility-and-localization/internationalization]
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
+          defaultTransition: Transition.native,
           theme: ThemeData(
             useMaterial3: true,
             primarySwatch: Colors.cyan,
@@ -53,7 +47,7 @@ void main() async {
 class MyApp extends StatefulWidget {
   final Widget? child;
 
-  MyApp({this.child});
+  const MyApp({super.key, this.child});
 
   static void restartApp(BuildContext context) {
     context.findAncestorStateOfType<_MyAppState>()!.restartApp();
