@@ -4,8 +4,8 @@ class PointLatLng {
   /// [longitude].
   ///
   const PointLatLng(double latitude, double longitude)
-      : this.latitude = latitude,
-        this.longitude = longitude;
+      : latitude = latitude,
+        longitude = longitude;
 
   /// The latitude in degrees.
   final double latitude;

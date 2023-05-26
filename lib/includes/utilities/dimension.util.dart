@@ -5,6 +5,7 @@ class Dimension {
 
   static double screenHeight = Get.context!.height;
   static double screenWidth = Get.context!.width;
+  static double buttonWidth = screenWidth - 20;
 
   Dimension(
       {this.topLeft,
@@ -21,8 +22,11 @@ class Dimension {
     }
   }
 
-  double radiusFx(double rad) {
+  static double radiusFx(double rad) {
     return screenHeight / (screenHeight / rad);
+  }
+  static double fontSize(double fraction)  {
+    return screenHeight / (screenHeight / fraction);
   }
   //Radius
 }

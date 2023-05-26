@@ -92,42 +92,38 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
       saveUserInfoNow();
     }
   }
+// This is a Dart function that creates a new user account in Firebase Authentication and saves user information to Firebase Realtime Database. It shows a dialog while the user account is being created and handles any errors that may occur during the process. Once the user account is created and the information is saved to the database, it navigates to the main screen of the app. The code uses the GetX package for state management and navigation.
+  
+Future<void> saveUserInfoNow() async {
+    const dialog = MFYPDialog(message: "Setting up...");
+    Get.dialog(dialog);
 
-  saveUserInfoNow() async {
-    Get.dialog(const MFYPDialog(
-      message: "Setting up...",
-    ));
     try {
-      final User? credential =
-          (await FirebaseAuth.instance.createUserWithEmailAndPassword(
+      final userCredential =
+          await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
-      ))
-              .user;
-      if (credential != null) {
-        currentFirebaseUser = credential;
-        Map credentialMap = {
-          "id": credential.uid,
-          "email": emailController.text.trim(),
-          "fullName": fullNameController.text.trim(),
-          "phone": phoneController.text.trim(),
-          "latitude": userCurrentPosition!.latitude.toString(),
-          "longitude": userCurrentPosition!.longitude.toString(),
-          "carType": carDrop
-        };
-        userRef = FirebaseDatabase.instance.ref().child("users");
-        userRef!.child(credential.uid).set(credentialMap);
-        Future.delayed(const Duration(seconds: 3), () {
-          Get.back();
-          Get.off(const MFYPMainScreen());
-        });
-      }
+      );
+      final credential = userCredential.user!;
+      currentFirebaseUser = credential;
+
+      final credentialMap = {
+        "id": credential.uid,
+        "email": emailController.text.trim(),
+        "fullName": fullNameController.text.trim(),
+        "phone": phoneController.text.trim(),
+        "carType": carDrop,
+      };
+      final userRef = FirebaseDatabase.instance.ref().child("users");
+      await userRef.child(credential.uid).set(credentialMap);
+
+      Get.back();
+      Get.off(() => const MFYPMainScreen());
     } on FirebaseAuthException catch (e) {
+      Get.back();
       if (e.code == 'weak-password') {
-        Get.back();
         snackBarMessage("The password provided is too weak.");
       } else if (e.code == 'email-already-in-use') {
-        Get.back();
         snackBarMessage("The account already exists for that email.");
       }
     } catch (e) {
@@ -376,3 +372,46 @@ class _MFYPSignUpScreenState extends State<MFYPSignUpScreen> {
     return FirebaseDatabase.instance.ref("car_information").onValue;
   }
 }
+
+// saveUserInfoNow() async {
+//     Get.dialog(const MFYPDialog(
+//       message: "Setting up...",
+//     ));
+//     try {
+//       final User? credential =
+//           (await FirebaseAuth.instance.createUserWithEmailAndPassword(
+//         email: emailController.text.trim(),
+//         password: passwordController.text.trim(),
+//       ))
+//               .user;
+//       if (credential != null) {
+//         currentFirebaseUser = credential;
+//         Map credentialMap = {
+//           "id": credential.uid,
+//           "email": emailController.text.trim(),
+//           "fullName": fullNameController.text.trim(),
+//           "phone": phoneController.text.trim(),
+//           "latitude": userCurrentPosition!.latitude.toString(),
+//           "longitude": userCurrentPosition!.longitude.toString(),
+//           "carType": carDrop
+//         };
+//         userRef = FirebaseDatabase.instance.ref().child("users");
+//         userRef!.child(credential.uid).set(credentialMap);
+//         Future.delayed(const Duration(seconds: 3), () {
+//           Get.back();
+//           Get.off(() => const MFYPMainScreen());
+//         });
+//       }
+//     } on FirebaseAuthException catch (e) {
+//       if (e.code == 'weak-password') {
+//         Get.back();
+//         snackBarMessage("The password provided is too weak.");
+//       } else if (e.code == 'email-already-in-use') {
+//         Get.back();
+//         snackBarMessage("The account already exists for that email.");
+//       }
+//     } catch (e) {
+//       Get.back();
+//       snackBarMessage(e.toString());
+//     }
+//   }

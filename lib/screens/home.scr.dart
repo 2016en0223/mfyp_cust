@@ -2,6 +2,7 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,7 +15,9 @@ import 'package:material_dialogs/material_dialogs.dart';
 import 'package:material_dialogs/shared/types.dart';
 import 'package:mfyp_cust/includes/mixins/reverse.geocoding.mixin.dart';
 import 'package:mfyp_cust/includes/models/location.direction.model.dart';
+import 'package:mfyp_cust/main.dart';
 import 'package:provider/provider.dart';
+import 'package:get/get.dart';
 import '../includes/assistants/send.fcm.assistant.dart';
 import '../includes/global.dart';
 import '../includes/handlers/user.info.handler.provider.dart';
@@ -57,7 +60,10 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   List<ActiveProviderModel> nearbyActiveSPList = [];
   BitmapDescriptor? activeNearbyIcon;
   bool option = false;
-  Dimension radi = Dimension();
+  double? requestUIHeight = Dimension.screenHeight * 0.35;
+  double? requestUI2Height = 0;
+  double? requestUI3Height = 0;
+
   AutomateFCM automateFCM = AutomateFCM();
 
 //-----------------------------------End-----------------------------------------
@@ -82,168 +88,304 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       body: Stack(
         children: [
           googleMap(),
-          requestUI(),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: Container(
+              height: requestUIHeight,
+              padding: EdgeInsets.symmetric(
+                  horizontal: Dimension.radiusFx(20),
+                  vertical: Dimension.radiusFx(20)),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(Dimension.radiusFx(20)),
+                  topLeft: Radius.circular(Dimension.radiusFx(25)),
+                ),
+                color: AppColor.backgroundColor,
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.navigation_outlined,
+                        color: Colors.black87,
+                        size: Dimension.radiusFx(24),
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Text(
+                        Provider.of<MFYPUserInfo>(context)
+                                    .userCurrentPointLocation ==
+                                null
+                            ? "Loading..."
+                            : "${(context.read<MFYPUserInfo>().userCurrentPointLocation!.formattedAddress!).substring(0, 20)}...",
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 2,
+                  ),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.car_repair_outlined,
+                        color: Colors.black87,
+                        size: 24,
+                      ),
+                      const SizedBox(
+                        width: 10,
+                      ),
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          GestureDetector(
+                            onTap: (() async {
+                              var searchScreen =
+                                  await Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (ctx) => const MFYPSearchScreen(),
+                                ),
+                              );
+                              if (searchScreen == "Home") {
+                                await drawPolylines();
+                              }
+                            }),
+                            child: Text(
+                              Provider.of<MFYPUserInfo>(context)
+                                          .techSPLocation ==
+                                      null
+                                  ? "Workshop location"
+                                  : Provider.of<MFYPUserInfo>(context)
+                                      .techSPLocation!
+                                      .locationName!,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(
+                        left: Dimension.screenWidth * 0.1,
+                        right: Dimension.screenWidth * 0.06),
+                    child: const Divider(
+                      thickness: 1,
+                      color: AppColor.primaryColor,
+                    ),
+                  ),
+                  MFYPButton(
+                      text: "Request",
+                      onPressed: () {
+                        if (Provider.of<MFYPUserInfo>(context, listen: false)
+                                .techSPLocation ==
+                            null) {
+                          snackBarMessage(
+                              "Select the nearest provider to proceed.");
+                        } else {
+                          showModalBottomSheet(
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(
+                                        Dimension.radiusFx(20)))),
+                            backgroundColor: Colors.white,
+                            elevation: 20,
+                            context: context,
+                            builder: (context) {
+                              return Wrap(
+                                children: [
+                                  ListTile(
+                                      leading: const Icon(
+                                          Icons.library_add_outlined),
+                                      title: const Text("Book Appointment"),
+                                      onTap: () => Get.back()),
+                                  ListTile(
+                                    leading:
+                                        const Icon(Icons.car_repair_outlined),
+                                    title: const Text("On the go"),
+                                    onTap: () {
+                                      saveRequestInfo();
+                                      Get.back();
+                                    },
+                                  ),
+                                  ListTile(
+                                    leading: const Icon(Icons.close_outlined),
+                                    title: const Text("Cancel"),
+                                    onTap: () => Get.back(),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        }
+                      }),
+                ],
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: Container(
+              height: requestUI2Height,
+              padding: EdgeInsets.symmetric(
+                  horizontal: Dimension.radiusFx(20),
+                  vertical: Dimension.radiusFx(20)),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                  topRight: Radius.circular(Dimension.radiusFx(20)),
+                  topLeft: Radius.circular(Dimension.radiusFx(25)),
+                ),
+                color: AppColor.backgroundColor,
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20.0),
+                child: Center(
+                  child: DefaultTextStyle(
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: Dimension.fontSize(15),
+                      fontFamily: 'SanFransisco',
+                    ),
+                    child: AnimatedTextKit(
+                      repeatForever: true,
+                      animatedTexts: [
+                        ScaleAnimatedText(
+                            "Request Sent Successfully\nPlease wait for the provider response",
+                            duration: const Duration(seconds: 10)),
+                      ],
+                      onTap: () {
+                        print("Tap Event");
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 0,
+            right: 0,
+            left: 0,
+            child: Wrap(
+              children: [
+                Container(
+                  height: requestUI3Height,
+                  padding: const EdgeInsets.only(
+                    top: 20,
+                  ),
+                  decoration: BoxDecoration(
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(Dimension.radiusFx(25)),
+                        topRight: Radius.circular(Dimension.radiusFx(25)),
+                      ),
+                      color: AppColor.backgroundColor),
+                  child: Column(
+                    children: [
+                      //-------------Topbar---------------
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.only(
+                                left: 30, right: 10, bottom: 10),
+                            child: Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: AppColor.primaryColor,
+                                borderRadius: BorderRadius.circular(
+                                  Dimension.radiusFx(10),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: EdgeInsets.all(Dimension.radiusFx(5)),
+                                child: Text(
+                                  "Hello",
+                                  style: TextStyle(
+                                      fontSize: Dimension.fontSize(16),
+                                      fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                              Padding(
+                                padding: EdgeInsets.only(
+                                    left: Dimension.radiusFx(5)),
+                                child: Text(
+                                  "Hello",
+                                  style: TextStyle(
+                                      fontSize: Dimension.fontSize(12),
+                                      fontWeight: FontWeight.bold,
+                                      color: AppColor.textFieldColor),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                      //------------End of Topbar------------
+
+                      //----------End of column bar----------------
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(Dimension.radiusFx(30),
+                            Dimension.radiusFx(15), Dimension.radiusFx(30), 0),
+                        child: MFYPButton(
+                          // space: false,
+                          // fixedSize: 100,
+                          // padding: EdgeInsets.symmetric(
+                          // vertical: Dimension.radiusFx(10),
+                          // horizontal: Dimension.radiusFx(20)),
+                          // text: button,
+                          onPressed: () {}, text: 'ello',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
   }
 
 //-------------------------------User Interface---------------------------------
-  googleMap() => GoogleMap(
-      initialCameraPosition: _initialCamera,
-      mapType: MapType.normal,
-      myLocationEnabled: true,
-      myLocationButtonEnabled: true,
-      zoomGesturesEnabled: true,
-      zoomControlsEnabled: true,
-      padding: EdgeInsets.only(bottom: googleMapPadding),
-      polylines: polylineSet,
-      markers: markerSet,
-      circles: circleSet,
-      onMapCreated: (GoogleMapController controller) {
-        _mapControllerCompleter.complete(controller);
-        newGMController = controller;
-        setState(() {
-          googleMapPadding = 200;
+  googleMap() {
+    return GoogleMap(
+        initialCameraPosition: _initialCamera,
+        mapType: MapType.normal,
+        myLocationEnabled: true,
+        myLocationButtonEnabled: true,
+        zoomGesturesEnabled: true,
+        zoomControlsEnabled: true,
+        padding: EdgeInsets.only(bottom: googleMapPadding),
+        polylines: polylineSet,
+        markers: markerSet,
+        circles: circleSet,
+        onMapCreated: (GoogleMapController controller) {
+          _mapControllerCompleter.complete(controller);
+          newGMController = controller;
+          setState(() {
+            googleMapPadding = 200;
+          });
         });
-      });
-  requestUI() {
-    return Positioned(
-      bottom: 0,
-      right: 0,
-      left: 0,
-      child: Container(
-        height: Dimension.screenHeight * 0.25,
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.only(
-            topRight: Radius.circular(radi.radiusFx(20)),
-            topLeft: Radius.circular(radi.radiusFx(25)),
-          ),
-          color: AppColor.backgroundColor,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            Row(
-              children: [
-                const Icon(
-                  Icons.navigation_outlined,
-                  color: Colors.black87,
-                  size: 24,
-                ),
-                const SizedBox(
-                  width: 10,
-                ),
-                Text(
-                  Provider.of<MFYPUserInfo>(context).userCurrentPointLocation ==
-                          null
-                      ? "Loading..."
-                      : "${(context.read<MFYPUserInfo>().userCurrentPointLocation!.formattedAddress!).substring(0, 20)}...",
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 2,
-            ),
-            Row(
-              children: [
-                const Icon(
-                  Icons.car_repair_outlined,
-                  color: Colors.black87,
-                  size: 24,
-                ),
-                const SizedBox(
-                  width: 10,
-                ),
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    GestureDetector(
-                      onTap: (() async {
-                        var searchScreen = await Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (ctx) => const MFYPSearchScreen(),
-                          ),
-                        );
-                        if (searchScreen == "Home") {
-                          await drawPolylines();
-                        }
-                      }),
-                      child: Text(
-                        Provider.of<MFYPUserInfo>(context).techSPLocation ==
-                                null
-                            ? "Workshop location"
-                            : Provider.of<MFYPUserInfo>(context)
-                                .techSPLocation!
-                                .locationName!,
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                    )
-                  ],
-                ),
-              ],
-            ),
-            Padding(
-              padding: EdgeInsets.only(
-                  left: Dimension.screenWidth * 0.1,
-                  right: Dimension.screenWidth * 0.06),
-              child: const Divider(
-                thickness: 1,
-                color: AppColor.primaryColor,
-              ),
-            ),
-            MFYPButton(
-                text: currentUserModel == null
-                    ? "Hello"
-                    : currentUserModel!.fullName.toString(),
-                onPressed: () {
-                  if (Provider.of<MFYPUserInfo>(context, listen: false)
-                          .techSPLocation ==
-                      null) {
-                    snackBarMessage("Select the nearest provider to proceed.");
-                  } else {
-                    showModalBottomSheet(
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.vertical(
-                              top: Radius.circular(radi.radiusFx(20)))),
-                      backgroundColor: Colors.white,
-                      elevation: 20,
-                      context: context,
-                      builder: (context) {
-                        return Wrap(
-                          children: [
-                            ListTile(
-                                leading: const Icon(Icons.library_add_outlined),
-                                title: const Text("Book Appointment"),
-                                onTap: () => Get.back()),
-                            ListTile(
-                              leading: const Icon(Icons.car_repair_outlined),
-                              title: const Text("On the go"),
-                              onTap: () {
-                                saveRequestInfo();
-                                Get.back();
-                              },
-                            ),
-                            ListTile(
-                              leading: const Icon(Icons.close_outlined),
-                              title: const Text("Cancel"),
-                              onTap: () => Get.back(),
-                            ),
-                          ],
-                        );
-                      },
-                    );
-                  }
-                }),
-          ],
-        ),
-      ),
-    );
   }
+
 //-----------------------------------End-----------------------------------------
 
 //---------------------------------Logics---------------------------------------
@@ -260,10 +402,10 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   getUserCurrentLocation() async {
     userCurrentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
-    LatLng userCurrentPostionLatLng =
+    LatLng userCurrentPositionLatLng =
         LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
     CameraPosition userCurrentLocationCam =
-        CameraPosition(target: userCurrentPostionLatLng, zoom: 15);
+        CameraPosition(target: userCurrentPositionLatLng, zoom: 15);
     newGMController!
         .animateCamera(CameraUpdate.newCameraPosition(userCurrentLocationCam));
 
@@ -486,8 +628,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                             const SizedBox(
                               height: 8,
                             ),
-                            Row(
-                              children: const [
+                            const Row(
+                              children: [
                                 Icon(Icons.phone_android_outlined),
                                 SizedBox(
                                   width: 8,
@@ -504,8 +646,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                             const SizedBox(
                               height: 8,
                             ),
-                            Row(
-                              children: const [
+                            const Row(
+                              children: [
                                 Icon(Icons.car_repair_outlined),
                                 SizedBox(
                                   width: 8,
@@ -541,7 +683,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                                 provider.locationLong;
                             locationDirection.providerID = provider.providerID;
                             locationDirection.locationName =
-                                currentUserModelLocal!.email;
+                                currentUserModelLocal!.locationName;
                             Provider.of<MFYPUserInfo>(context, listen: false)
                                 .getProviderLatLng(locationDirection);
 
@@ -577,8 +719,12 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   }
 
   saveRequestInfo() {
+    setState(() {
+      option = true;
+    });
     /* This function save the request made by the user and accepted by the provider and this is served to the Firebase */
     prequest = FirebaseDatabase.instance.ref().child("requests").push();
+
     var userLocation = context.read<MFYPUserInfo>().userCurrentPointLocation;
     var providerLocation = context.read<MFYPUserInfo>().techSPLocation;
 
@@ -600,21 +746,23 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       "phone": currentUserModel!.phone,
       "carType": currentUserModel!.carType,
       "originAddress": userLocation.locationName,
-      "destinationAddress": providerLocation.locationName,
+      "destinationAddress": providerLocation.formattedAddress,
+      "spec": currentUserModel!.carType
     };
 
     Map providerMeetTheUser = {
       "destination": userLocationMap,
       "origin": providerLocationMap,
-      "time": DateTime.now().toString(),
       "fullName": currentUserModel!.fullName,
       "phone": currentUserModel!.phone,
-      "originAddress": userLocation.locationName,
-      "destinationAddress": providerLocation.locationName,
+      "time": DateTime.now().toString(),
+      "originAddress": providerLocation.locationName,
+      "destinationAddress": userLocation.formattedAddress,
+      "spec": currentUserModel!.carType
     };
     option
-        ? prequest!.set(userMeetTheProviderMap)
-        : prequest!.set(providerMeetTheUser);
+        ? prequest!.set(providerMeetTheUser)
+        : prequest!.set(userMeetTheProviderMap);
 
     String providerID =
         context.read<MFYPUserInfo>().techSPLocation!.providerID.toString();
@@ -622,33 +770,110 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     prepareNotificationToProvider(providerID);
   }
 
-  prepareNotificationToProvider(String selectedProviderID) {
-    DatabaseReference ref = FirebaseDatabase.instance
+  void prepareNotificationToProvider(String selectedProviderID) {
+    final ref = FirebaseDatabase.instance
         .ref()
         .child("providers")
         .child(selectedProviderID);
     ref.child("status").set(prequest!.key!);
 
-    /* This function send notification using Firebase Cloud Messaging */
+    /* This function sends a notification using Firebase Cloud Messaging */
 
-    ref.child("token").once().then((snapped) {
-      String snappedToken = snapped.snapshot.value.toString();
-      if (snappedToken.isNotEmpty) {
-        String deviceToken = snappedToken.toString();
-        String requestKey = prequest!.key.toString();
-        automateFCM.sendFCMNotificationGet(deviceToken, requestKey, context);
-        // AutomateFCM.sendFCMNotification(deviceToken, requestKey, context);
-        ref.child("status").onValue.listen((eventSnap) {
-          var eventValue = eventSnap.snapshot.value;
-          if (eventValue == "Idle") {
-            snackGet("Ops", "Request Cancelled.");
-          }
-        });
-      } else if (snappedToken.toString().isEmpty) {
-        snackGet("Message", "Request failed");
+    final snapped = ref.child("token").once();
+    final snappedToken = snapped.snapshot.value.toString();
+    if (snappedToken.isNotEmpty) {
+      final deviceToken = snappedToken.toString();
+      final requestKey = prequest!.key.toString();
+      automateFCM.sendFCMNotificationGet(deviceToken, requestKey, context);
+      // AutomateFCM.sendFCMNotification(deviceToken, requestKey, context);
+
+      ref.child("status").onValue.listen((eventSnap) {
+        final eventValue = eventSnap.snapshot.value.toString();
+        requestUI2();
+        if (eventValue == "Idle") {
+          snackGet("Failed", "Your request was cancelled");
+        } else if (eventValue == "accepted") {
+          requestUI3();
+        }
+      });
+    } else if (snappedToken.isEmpty) {
+      snackGet("Message", "Request failed");
+    }
+
+    await ref.child("status").onValue.first.then((eventSnap) {
+      final eventValue = eventSnap.snapshot.value.toString();
+      if (eventValue == "Idle") {
+        MyApp.restartApp(context);
+      } else if (eventValue == "arrived") {
+        snackGet("Notification", "Provider has arrived");
       }
     });
   }
+
+  requestUI2() {
+    setState(() {
+      requestUIHeight = 0;
+      requestUI2Height = Dimension.screenHeight * 0.35;
+    });
+  }
+
+  requestUI3() {
+    setState(() {
+      requestUIHeight = 0;
+      requestUI2Height = 0;
+      requestUI3Height = Dimension.screenHeight * 0.35;
+    });
+  }
+  // prepareNotificationToProvider(String selectedProviderID) {
+  //   DatabaseReference ref = FirebaseDatabase.instance
+  //       .ref()
+  //       .child("providers")
+  //       .child(selectedProviderID);
+  //   ref.child("status").set(prequest!.key!);
+
+  //   /* This function send notification using Firebase Cloud Messaging */
+
+  //   ref.child("token").once().then((snapped) {
+  //     String snappedToken = snapped.snapshot.value.toString();
+  //     if (snappedToken.isNotEmpty) {
+  //       String deviceToken = snappedToken.toString();
+  //       String requestKey = prequest!.key.toString();
+  //       automateFCM.sendFCMNotificationGet(deviceToken, requestKey, context);
+  //       // AutomateFCM.sendFCMNotification(deviceToken, requestKey, context);
+  //       FirebaseDatabase.instance
+  //           .ref()
+  //           .child("providers")
+  //           .child(selectedProviderID)
+  //           .child("status")
+  //           .onValue
+  //           .listen((eventSnap) {
+  //         String eventValue = eventSnap.snapshot.value.toString();
+
+  //         if (eventValue == "Idle") {
+  //           snackGet("Failed", "Your request was cancelled");
+  //         } else if (eventValue == "accepted") {
+  //           snackBarMessage("accepted");
+  //           snackGet("Success", "Request Accepted");
+  //         }
+  //       });
+  //     } else if (snappedToken.toString().isEmpty) {
+  //       snackGet("Message", "Request failed");
+  //     }
+  //   });
+  //   FirebaseDatabase.instance
+  //       .ref()
+  //       .child("providers")
+  //       .child(selectedProviderID)
+  //       .child("status")
+  //       .onValue
+  //       .listen((eventSnap) {
+  //     String eventValue = eventSnap.snapshot.value.toString();
+
+  //     if (eventValue == "arrived") {
+  //       snackGet("Notification", "Provider has arrived");
+  //     }
+  //   });
+  // }
 
 //-----------------------------------End-----------------------------------------
 }

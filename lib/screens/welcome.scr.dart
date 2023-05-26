@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:get/route_manager.dart';
-import 'package:mfyp_cust/screens/login.scr.dart';
-import 'package:mfyp_cust/screens/register.scr.dart';
-
+import '/screens/login.scr.dart';
+import '/screens/register.scr.dart';
+import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
+import '../includes/utilities/dimension.util.dart';
 
 class MFYPWelcomePage extends StatelessWidget {
   const MFYPWelcomePage({super.key});
@@ -12,29 +13,32 @@ class MFYPWelcomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SizedBox(
-        width: MediaQuery.of(context).size.width,
-        height: MediaQuery.of(context).size.height,
+        width: Dimension.screenWidth,
+        height: Dimension.screenHeight,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Section 1 - Illustration
             Container(
-                margin: const EdgeInsets.only(top: 32),
-                width: MediaQuery.of(context).size.width,
-                child: const Image(
-                  image: AssetImage("assets/image/user.png"),
+                margin: EdgeInsets.only(top: Dimension.radiusFx(32)),
+                width: Dimension.screenWidth,
+                child: Image(
+                  fit: BoxFit.scaleDown,
+                  image: const AssetImage("assets/image/user.png"),
+                  width: Dimension.radiusFx(200),
+                  height: Dimension.radiusFx(200),
                 )),
-            // Section 2 - Marketky with Caption
+            // Section 2 - with Caption
             Column(
               children: [
                 Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  child: const Text(
+                  margin: EdgeInsets.only(bottom: Dimension.radiusFx(12)),
+                  child: Text(
                     "MFYP User's App",
                     style: TextStyle(
                       color: AppColor.secondary,
                       fontWeight: FontWeight.w700,
-                      fontSize: 32,
+                      fontSize: Dimension.fontSize(32),
                       fontFamily: "SanFrancisco",
                     ),
                   ),
@@ -54,61 +58,22 @@ class MFYPWelcomePage extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: 30),
               child: Column(
                 children: [
-                  ElevatedButton(
+                  MFYPButton(
                     onPressed: () {
-                      Navigator.of(context).push(MaterialPageRoute(
-                          builder: (context) => const MFYPLogin()));
+                      Get.to(() => const MFYPLogin());
                     },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 36, vertical: 18),
-                      backgroundColor: AppColor.primaryColor,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                    ),
-                    child: const Text(
-                      "Login",
-                      style: TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                          fontFamily: "SanFrancisco"),
-                    ),
+                    text: "Login",
                   ),
                   const SizedBox(
                     height: 10,
                   ),
-                  ElevatedButton(
+                  MFYPButton(
                     onPressed: () {
-                      // FirebaseDatabase.instance
-                      //     .ref()
-                      //     .child("car_information")
-                      //     .set({"0": "yes", "1": "hi", "2": "What"});
-                      Get.to(() => const MFYPSignUpScreen()); 
-                      
+                      Get.to(() => const MFYPSignUpScreen());
                     },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 36, vertical: 18),
-                      backgroundColor: AppColor.border,
-                      shape: RoundedRectangleBorder(
-                          side: const BorderSide(
-                            color: AppColor.textFieldColor,
-                          ),
-                          borderRadius: BorderRadius.circular(16)),
-                      elevation: 0,
-                      shadowColor: Colors.transparent,
-                    ),
-                    child: const Text(
-                      "Get Started",
-                      style: TextStyle(
-                          color: AppColor.primaryColor,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 18,
-                          fontFamily: "SanFrancisco"),
-                    ),
+
+                    text: "Get Started",
+
                   ),
                 ],
               ),

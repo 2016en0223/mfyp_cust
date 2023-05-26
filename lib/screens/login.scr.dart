@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:get/route_manager.dart';
-import 'package:mfyp_cust/includes/utilities/dimension.util.dart';
 import '../includes/global.dart';
 import '../includes/models/user.mixin.model.dart';
 import '../includes/utilities/colors.dart';

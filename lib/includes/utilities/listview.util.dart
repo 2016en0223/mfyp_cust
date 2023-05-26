@@ -12,7 +12,7 @@ import '../assistants/requests.dart';
 class MFYPListView extends StatelessWidget {
   final MFYPNearBy? predictedNearby;
 
-  MFYPListView({this.predictedNearby});
+  const MFYPListView({super.key, this.predictedNearby});
 
   getPlaceDetails(String? placeID, [context]) async {
     showDialog(
