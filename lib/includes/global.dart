@@ -21,4 +21,5 @@ FirebaseAuth fAuth = FirebaseAuth.instance;
 Dimension radi = Dimension();
 String cloudMessagingToken =
     "key=AAAA9AJlyFA:APA91bEn_KntT_quvcOfRWTHzPcWenWPpOzJr4BkJ6SO2zgCwaTHleu7aPsfJgDciZoQHO2qjUUW9nqo0rDz7mPTuhT7YSic48GWKDHkuApMi0ImyhV3mDHdDQPVl-htrFBG6xNqghfR";
-
+double starRatingValue = 0.0;
+String? fullName, email, phone, carType, address, starRatingTitle;

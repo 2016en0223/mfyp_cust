@@ -15,7 +15,6 @@ import 'package:material_dialogs/material_dialogs.dart';
 import 'package:material_dialogs/shared/types.dart';
 import 'package:mfyp_cust/includes/mixins/reverse.geocoding.mixin.dart';
 import 'package:mfyp_cust/includes/models/location.direction.model.dart';
-import 'package:mfyp_cust/main.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import '../includes/assistants/send.fcm.assistant.dart';
@@ -31,7 +30,7 @@ import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
 import '../includes/utilities/dimension.util.dart';
 import 'login.scr.dart';
-import 'search.scr.dart';
+import 'rate.scr.dart';
 
 //----------------------------------End-----------------------------------------
 class MFYPHomeScreen extends StatefulWidget {
@@ -63,6 +62,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   double? requestUIHeight = Dimension.screenHeight * 0.35;
   double? requestUI2Height = 0;
   double? requestUI3Height = 0;
+  StreamSubscription<DatabaseEvent>? requestUIStreamSubscription;
+  String requestStatus = "", requestStatusDx = "";
+  bool requestPositionInfo = true;
 
   AutomateFCM automateFCM = AutomateFCM();
 
@@ -145,30 +147,15 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                       Column(
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
-                          GestureDetector(
-                            onTap: (() async {
-                              var searchScreen =
-                                  await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (ctx) => const MFYPSearchScreen(),
-                                ),
-                              );
-                              if (searchScreen == "Home") {
-                                await drawPolylines();
-                              }
-                            }),
-                            child: Text(
-                              Provider.of<MFYPUserInfo>(context)
-                                          .techSPLocation ==
-                                      null
-                                  ? "Workshop location"
-                                  : Provider.of<MFYPUserInfo>(context)
-                                      .techSPLocation!
-                                      .locationName!,
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.w700),
-                            ),
-                          )
+                          Text(
+                            Provider.of<MFYPUserInfo>(context).techSPLocation ==
+                                    null
+                                ? "Workshop location"
+                                : Provider.of<MFYPUserInfo>(context)
+                                    .techSPLocation!
+                                    .locationName!,
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
                         ],
                       ),
                     ],
@@ -261,12 +248,11 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                       repeatForever: true,
                       animatedTexts: [
                         ScaleAnimatedText(
-                            "Request Sent Successfully\nPlease wait for the provider response",
-                            duration: const Duration(seconds: 10)),
+                          "Request Sent Successfully\nPlease wait for the provider's response",
+                          duration: const Duration(seconds: 5),
+                          textAlign: TextAlign.center,
+                        ),
                       ],
-                      onTap: () {
-                        print("Tap Event");
-                      },
                     ),
                   ),
                 ),
@@ -282,7 +268,9 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                 Container(
                   height: requestUI3Height,
                   padding: const EdgeInsets.only(
-                    top: 20,
+                    right: 10,
+                    left: 10,
+                    top: 10,
                   ),
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.only(
@@ -292,13 +280,29 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                       color: AppColor.backgroundColor),
                   child: Column(
                     children: [
+                      Text(
+                        requestStatus == "accepted"
+                            ? ""
+                            : requestStatus == "working"
+                                ? ""
+                                : requestStatus == "arrived"
+                                    ? ""
+                                    : requestStatus == "done"
+                                        ? ""
+                                        : requestStatus.toString(),
+                      ),
+                      const Divider(
+                        thickness: 1,
+                        color: AppColor.primaryColor,
+                      ),
+                      const SizedBox(height: 5),
                       //-------------Topbar---------------
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Padding(
                             padding: const EdgeInsets.only(
-                                left: 30, right: 10, bottom: 10),
+                                left: 10, right: 10, bottom: 10),
                             child: Container(
                               width: 60,
                               height: 60,
@@ -316,7 +320,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                               Padding(
                                 padding: EdgeInsets.all(Dimension.radiusFx(5)),
                                 child: Text(
-                                  "Hello",
+                                  fullName.toString(),
                                   style: TextStyle(
                                       fontSize: Dimension.fontSize(16),
                                       fontWeight: FontWeight.w700),
@@ -326,11 +330,13 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                                 padding: EdgeInsets.only(
                                     left: Dimension.radiusFx(5)),
                                 child: Text(
-                                  "Hello",
+                                  requestStatusDx.isEmpty
+                                      ? ""
+                                      : requestStatusDx.toString(),
                                   style: TextStyle(
                                       fontSize: Dimension.fontSize(12),
-                                      fontWeight: FontWeight.bold,
-                                      color: AppColor.textFieldColor),
+                                      fontWeight: FontWeight.w700,
+                                      color: Colors.green),
                                 ),
                               ),
                             ],
@@ -341,16 +347,11 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
                       //----------End of column bar----------------
                       Padding(
-                        padding: EdgeInsets.fromLTRB(Dimension.radiusFx(30),
-                            Dimension.radiusFx(15), Dimension.radiusFx(30), 0),
+                        padding: EdgeInsets.fromLTRB(Dimension.radiusFx(15),
+                            Dimension.radiusFx(5), Dimension.radiusFx(15), 0),
                         child: MFYPButton(
-                          // space: false,
-                          // fixedSize: 100,
-                          // padding: EdgeInsets.symmetric(
-                          // vertical: Dimension.radiusFx(10),
-                          // horizontal: Dimension.radiusFx(20)),
-                          // text: button,
-                          onPressed: () {}, text: 'ello',
+                          onPressed: () {},
+                          text: "Confirm",
                         ),
                       ),
                     ],
@@ -428,8 +429,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       const MFYPDialog(message: "Please wait..."),
     );
 
-    var getEncodedPoint =
-        await getEncodedPointsFromProviderToUser(userLatLng, techSPLatLng);
+    var getEncodedPoint = await Assistant.getEncodedPointsFromProviderToUser(
+        userLatLng, techSPLatLng);
     Navigator.of(context).pop();
     PolylinePoints points = PolylinePoints();
     List<PointLatLng> decodedpoints =
@@ -636,7 +637,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
                                 ),
                                 Expanded(
                                   child: Text(
-                                    "Contact Number" ?? "hello" ?? "Hi",
+                                    "Contact Number",
                                     softWrap: true,
                                     overflow: TextOverflow.visible,
                                   ),
@@ -763,6 +764,60 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     option
         ? prequest!.set(providerMeetTheUser)
         : prequest!.set(userMeetTheProviderMap);
+    requestUIStreamSubscription = prequest!.onValue.listen((eventSnap) {
+      var eventData = eventSnap.snapshot.value as Map;
+      if (eventSnap.snapshot.value == null) {
+        return;
+      }
+      if (eventData["fullName"] != null) {
+        fullName = eventData["fullName"];
+      }
+      if (eventData["phone"] != null) {
+        phone = eventData["phone"];
+      }
+      if (eventData["spec"] != null) {
+        carType = eventData["carType"];
+      }
+      if (eventData["status"] != null) {
+        requestStatus = eventData["status"].toString();
+      }
+      if (eventData["providerLocation"] != null) {
+        double providerLat =
+            double.parse(eventData["providerLocation"]["latitude"].toString());
+        double providerLng =
+            double.parse(eventData["providerLocation"]["longitude"].toString());
+        LatLng providerLatLng = LatLng(providerLat, providerLng);
+        if (requestStatus == "accepted") {
+          updateProviderArrivalTime(providerLatLng);
+        }
+
+        if (requestStatus == "arrived") {
+          setState(() {
+            requestStatus = '';
+            requestStatusDx = "Provider has arrived";
+          });
+        }
+        if (requestStatus == "done") {
+          showDialog(
+            context: context,
+            builder: ((context) => const MFYPDialog(
+                  message: "Please wait...",
+                )),
+          );
+          setState(() {
+            requestStatus = 'done';
+            requestStatusDx = "Provider has finished";
+          });
+          if (eventData["id"] != null) {
+            prequest!.child("status").set("end");
+            Get.to(() =>
+                MFYPRateProvider(assignedProvider: eventData["id"].toString()));
+          }
+          prequest!.onDisconnect();
+          requestUIStreamSubscription!.cancel();
+        }
+      }
+    });
 
     String providerID =
         context.read<MFYPUserInfo>().techSPLocation!.providerID.toString();
@@ -770,7 +825,25 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     prepareNotificationToProvider(providerID);
   }
 
-  void prepareNotificationToProvider(String selectedProviderID) {
+  updateProviderArrivalTime(LatLng providerLatLng) async {
+    if (requestPositionInfo == true) {
+      requestPositionInfo = false;
+      LatLng userLocation =
+          LatLng(userCurrentPosition!.latitude, userCurrentPosition!.longitude);
+      var directionInfo = await Assistant.getEncodedPointsFromProviderToUser(
+          providerLatLng, userLocation);
+      if (directionInfo == null) {
+        return;
+      }
+      setState(() {
+        requestStatus = directionInfo.durationText.toString();
+        requestStatusDx = "Provider is coming";
+      });
+      requestPositionInfo = true;
+    }
+  }
+
+  void prepareNotificationToProvider(String selectedProviderID) async {
     final ref = FirebaseDatabase.instance
         .ref()
         .child("providers")
@@ -779,32 +852,38 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
     /* This function sends a notification using Firebase Cloud Messaging */
 
-    final snapped = ref.child("token").once();
-    final snappedToken = snapped.snapshot.value.toString();
-    if (snappedToken.isNotEmpty) {
-      final deviceToken = snappedToken.toString();
-      final requestKey = prequest!.key.toString();
-      automateFCM.sendFCMNotificationGet(deviceToken, requestKey, context);
-      // AutomateFCM.sendFCMNotification(deviceToken, requestKey, context);
+    ref.child("token").once().then((snapped) {
+      final snappedToken = snapped.snapshot.value.toString();
+      if (snappedToken.isNotEmpty) {
+        final deviceToken = snappedToken.toString();
+        final requestKey = prequest!.key.toString();
+        automateFCM.sendFCMNotificationGet(deviceToken, requestKey, context);
 
-      ref.child("status").onValue.listen((eventSnap) {
-        final eventValue = eventSnap.snapshot.value.toString();
-        requestUI2();
-        if (eventValue == "Idle") {
-          snackGet("Failed", "Your request was cancelled");
-        } else if (eventValue == "accepted") {
-          requestUI3();
-        }
-      });
-    } else if (snappedToken.isEmpty) {
-      snackGet("Message", "Request failed");
-    }
-
-    await ref.child("status").onValue.first.then((eventSnap) {
-      final eventValue = eventSnap.snapshot.value.toString();
-      if (eventValue == "Idle") {
-        MyApp.restartApp(context);
-      } else if (eventValue == "arrived") {
+        ref.child("status").onValue.listen((eventSnap) {
+          final eventValue = eventSnap.snapshot.value.toString();
+          requestUI2();
+          if (eventValue == "Idle") {
+            snackBarMessage("Your request was cancelled.");
+          }
+          if (eventValue == "accepted") {
+            requestUI3();
+            snackBarMessage("Your request was accepted.");
+          }
+        });
+      } else if (snappedToken.isEmpty) {
+        snackBarMessage("Request not found.");
+      }
+    });
+    FirebaseDatabase.instance
+        .ref()
+        .child("requests")
+        .child(prequest!.key.toString())
+        .child("status")
+        .onValue
+        .listen((eventSnap) {
+      String eventValue = eventSnap.snapshot.value.toString();
+      if (eventValue == "accepted") {}
+      if (eventValue == "arrived") {
         snackGet("Notification", "Provider has arrived");
       }
     });
@@ -824,56 +903,5 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       requestUI3Height = Dimension.screenHeight * 0.35;
     });
   }
-  // prepareNotificationToProvider(String selectedProviderID) {
-  //   DatabaseReference ref = FirebaseDatabase.instance
-  //       .ref()
-  //       .child("providers")
-  //       .child(selectedProviderID);
-  //   ref.child("status").set(prequest!.key!);
-
-  //   /* This function send notification using Firebase Cloud Messaging */
-
-  //   ref.child("token").once().then((snapped) {
-  //     String snappedToken = snapped.snapshot.value.toString();
-  //     if (snappedToken.isNotEmpty) {
-  //       String deviceToken = snappedToken.toString();
-  //       String requestKey = prequest!.key.toString();
-  //       automateFCM.sendFCMNotificationGet(deviceToken, requestKey, context);
-  //       // AutomateFCM.sendFCMNotification(deviceToken, requestKey, context);
-  //       FirebaseDatabase.instance
-  //           .ref()
-  //           .child("providers")
-  //           .child(selectedProviderID)
-  //           .child("status")
-  //           .onValue
-  //           .listen((eventSnap) {
-  //         String eventValue = eventSnap.snapshot.value.toString();
-
-  //         if (eventValue == "Idle") {
-  //           snackGet("Failed", "Your request was cancelled");
-  //         } else if (eventValue == "accepted") {
-  //           snackBarMessage("accepted");
-  //           snackGet("Success", "Request Accepted");
-  //         }
-  //       });
-  //     } else if (snappedToken.toString().isEmpty) {
-  //       snackGet("Message", "Request failed");
-  //     }
-  //   });
-  //   FirebaseDatabase.instance
-  //       .ref()
-  //       .child("providers")
-  //       .child(selectedProviderID)
-  //       .child("status")
-  //       .onValue
-  //       .listen((eventSnap) {
-  //     String eventValue = eventSnap.snapshot.value.toString();
-
-  //     if (eventValue == "arrived") {
-  //       snackGet("Notification", "Provider has arrived");
-  //     }
-  //   });
-  // }
-
 //-----------------------------------End-----------------------------------------
 }

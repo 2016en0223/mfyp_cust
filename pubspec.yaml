@@ -64,6 +64,7 @@ dependencies:
   fluttertoast: ^8.2.1
   overlay_toast_message: ^1.0.2
   animated_text_kit: ^4.2.2
+  rating_dialog: ^2.0.4
   
 
 dev_dependencies:
