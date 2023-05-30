@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shirne_dialog/shirne_dialog.dart';
 import 'firebase_option.dart';
 import 'includes/handlers/user.info.handler.provider.dart';
+import 'includes/widget/history.widget.dart';
 import 'screens/rate.scr.dart';
 
 void main() async {
@@ -29,7 +30,7 @@ void main() async {
       child: ChangeNotifierProvider(
         create: (context) => MFYPUserInfo(),
         child: GetMaterialApp(
-          title: 'Drivers App',
+          title: 'User App',
           navigatorKey: MyDialog.navigatorKey,
           defaultTransition: Transition.native,
           theme: ThemeData(

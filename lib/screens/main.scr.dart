@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mfyp_cust/screens/history.scr.dart';
+import '../includes/assistants/asistant.inc.dart';
 import 'account.scr.dart';
 import 'home.scr.dart';
 //-------------------------------------End--------------------------------------
@@ -42,6 +43,7 @@ class MFYPMainScreenState extends State<MFYPMainScreen>
   void initState() {
     super.initState();
     deviceLocationPermission();
+    Assistant.readRequestKey(context);
     tabController = TabController(length: 4, vsync: this);
   }
 
@@ -49,10 +51,9 @@ class MFYPMainScreenState extends State<MFYPMainScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 0,
-        elevation: 0,
-          systemOverlayStyle: SystemUiOverlayStyle.light
-      ),
+          toolbarHeight: 0,
+          elevation: 0,
+          systemOverlayStyle: SystemUiOverlayStyle.light),
       bottomNavigationBar: BottomNavigationBar(
         items: const [
           BottomNavigationBarItem(
@@ -88,10 +89,10 @@ class MFYPMainScreenState extends State<MFYPMainScreen>
       body: TabBarView(
         physics: const NeverScrollableScrollPhysics(),
         controller: tabController,
-        children: const [
+        children: [
           MFYPHomeScreen(),
           MFYPHistoryScreen(),
-          MFYPAccount(),
+          MFYPProfilePage(),
         ],
       ),
     );

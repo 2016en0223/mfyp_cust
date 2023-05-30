@@ -2,6 +2,8 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'dart:async';
+import 'dart:developer';
+import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +17,7 @@ import 'package:material_dialogs/material_dialogs.dart';
 import 'package:material_dialogs/shared/types.dart';
 import 'package:mfyp_cust/includes/mixins/reverse.geocoding.mixin.dart';
 import 'package:mfyp_cust/includes/models/location.direction.model.dart';
+import 'package:mfyp_cust/screens/history.scr.dart';
 import 'package:provider/provider.dart';
 import 'package:get/get.dart';
 import '../includes/assistants/send.fcm.assistant.dart';
@@ -24,7 +27,7 @@ import '../includes/mixins/service.provider.mixin.dart';
 import '../includes/models/activeprovider.model.dart';
 import '../includes/models/user.mixin.model.dart';
 import '../includes/models/user.model.inc.dart';
-import '../includes/assistants/get.encoded.points.assistant.dart';
+import '../includes/assistants/asistant.inc.dart';
 import '../includes/utilities/button.util.dart';
 import '../includes/utilities/colors.dart';
 import '../includes/utilities/dialog.util.dart';
@@ -50,6 +53,13 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   );
 
 //--------------------------------Variables--------------------------------------
+  /// Controller to handle PageView and also handles initial page
+  final _pageController = PageController(initialPage: 0);
+
+  /// Controller to handle bottom nav bar and also handles initial page
+  final _controller = NotchBottomBarController(index: 0);
+
+  int maxCount = 5;
   var geolocator = Geolocator;
   LocationPermission? userLocationPermission;
   List<LatLng> decodedLatLng = [];
@@ -74,7 +84,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   void initState() {
     super.initState();
     initLogin();
-
+    Assistant.readRequestHistory(context);
+    print("Assistant");
     getUserCurrentLocation();
   }
 
@@ -401,6 +412,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
   }
 
   getUserCurrentLocation() async {
+    print("1. Idan Request");
     userCurrentPosition = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.high);
     LatLng userCurrentPositionLatLng =
@@ -412,6 +424,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
 
     await Geocoding.reverseGeocoding(userCurrentPosition!, context);
     geofireListener();
+    print("2. Idan Request");
+    Assistant.readRequestHistory(context);
   }
 
   Future drawPolylines() async {
@@ -552,172 +566,327 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     });
   }
 
+  final DatabaseReference ref =
+      FirebaseDatabase.instance.ref().child("providers");
+
   displayActiveProviderMarker() async {
-    UserModel? currentUserModelLocal;
-    DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
-    /* This snippet helps to display the nearby provider with marker */
+    Set<Marker> providerSet = <Marker>{};
     setState(() {
       markerSet.clear();
       circleSet.clear();
+    });
 
-      Set<Marker> providerSet = <Marker>{};
+    await Future.forEach(ActiveProvider.availableProvider,
+        (ActiveProviderModel provider) async {
+      LatLng providerPosition =
+          LatLng(provider.locationLat!, provider.locationLong!);
 
-      for (ActiveProviderModel provider in ActiveProvider.availableProvider) {
-        LatLng providerPosition =
-            LatLng(provider.locationLat!, provider.locationLong!);
-
-        Future.delayed(const Duration(milliseconds: 500), () {
-          Marker providerMarker = Marker(
-            icon: BitmapDescriptor.defaultMarker,
-            markerId: MarkerId(provider.providerID!),
-            position: providerPosition,
-            rotation: 360,
-            infoWindow: InfoWindow(
-                title: ">>",
-                onTap: () async {
-                  await ref
-                      .child(provider.providerID.toString())
-                      .once()
-                      .then((data) {
-                    currentUserModelLocal =
-                        UserModel.fromSnapshot(data.snapshot);
-                  });
-                  Get.dialog(Dialogs.materialDialog(
-                      barrierDismissible: false,
-                      barrierColor: Colors.transparent,
-                      color: Colors.white,
-                      title: "Provider Information",
-                      titleStyle: const TextStyle(
-                          fontWeight: FontWeight.w800, fontSize: 20),
-                      customView: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 18),
-                        child: Column(
-                          children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.person),
-                                const SizedBox(
-                                  width: 8,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    currentUserModelLocal!.fullName!,
-                                    softWrap: true,
-                                    overflow: TextOverflow.visible,
-                                  ),
-                                ),
-                              ],
+      Marker providerMarker = Marker(
+        icon: BitmapDescriptor.defaultMarker,
+        markerId: MarkerId(provider.providerID!),
+        position: providerPosition,
+        rotation: 360,
+        infoWindow: InfoWindow(
+          title: ">>",
+          onTap: () async {
+            DatabaseEvent data =
+                await ref.child(provider.providerID.toString()).once();
+            UserModel currentUserModelLocal =
+                UserModel.fromSnapshot(data.snapshot);
+            Get.dialog(
+              Dialogs.materialDialog(
+                barrierDismissible: false,
+                barrierColor: Colors.transparent,
+                color: Colors.white,
+                title: "Provider Information",
+                titleStyle:
+                    const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                customView: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.person),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              currentUserModelLocal.fullName!,
+                              softWrap: true,
+                              overflow: TextOverflow.visible,
                             ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            Row(
-                              children: [
-                                const Icon(Icons.location_on_outlined),
-                                const SizedBox(
-                                  width: 8,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    currentUserModelLocal!.email!,
-                                    softWrap: true,
-                                    overflow: TextOverflow.visible,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            const Row(
-                              children: [
-                                Icon(Icons.phone_android_outlined),
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    "Contact Number",
-                                    softWrap: true,
-                                    overflow: TextOverflow.visible,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              height: 8,
-                            ),
-                            const Row(
-                              children: [
-                                Icon(Icons.car_repair_outlined),
-                                SizedBox(
-                                  width: 8,
-                                ),
-                                Expanded(
-                                  child: Text(
-                                    "Service Type",
-                                    softWrap: true,
-                                    overflow: TextOverflow.visible,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                      customViewPosition: CustomViewPosition.BEFORE_ACTION,
-                      context: context,
-                      actions: [
-                        MFYPTextButton(
-                          text: "Back",
-                          onPressed: (() {
-                            Get.back();
-                          }),
-                        ),
-                        MFYPButton(
-                          onPressed: () {
-                            LocationDirection locationDirection =
-                                LocationDirection();
-                            locationDirection.locationLat =
-                                provider.locationLat;
-                            locationDirection.locationLong =
-                                provider.locationLong;
-                            locationDirection.providerID = provider.providerID;
-                            locationDirection.locationName =
-                                currentUserModelLocal!.locationName;
-                            Provider.of<MFYPUserInfo>(context, listen: false)
-                                .getProviderLatLng(locationDirection);
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_outlined),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              currentUserModelLocal.email!,
+                              softWrap: true,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Row(
+                        children: [
+                          Icon(Icons.phone_android_outlined),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "Contact Number",
+                              softWrap: true,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      const Row(
+                        children: [
+                          Icon(Icons.car_repair_outlined),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              "Service Type",
+                              softWrap: true,
+                              overflow: TextOverflow.visible,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                customViewPosition: CustomViewPosition.BEFORE_ACTION,
+                context: context,
+                actions: [
+                  MFYPTextButton(
+                    text: "Back",
+                    onPressed: () {
+                      Get.back();
+                    },
+                  ),
+                  MFYPButton(
+                    onPressed: () {
+                      LocationDirection locationDirection = LocationDirection();
+                      locationDirection.locationLat = provider.locationLat;
+                      locationDirection.locationLong = provider.locationLong;
+                      locationDirection.providerID = provider.providerID;
+                      locationDirection.locationName =
+                          currentUserModelLocal.locationName;
+                      Provider.of<MFYPUserInfo>(context, listen: false)
+                          .getProviderLatLng(locationDirection);
 
-                            Marker selectedProviderMarker = Marker(
-                                icon: BitmapDescriptor.defaultMarker,
-                                markerId: MarkerId(provider.providerID!),
-                                position: providerPosition,
-                                rotation: 360,
-                                infoWindow: InfoWindow(
-                                  title: currentUserModelLocal!.fullName,
-                                  snippet: currentUserModelLocal!.latitude,
-                                ));
-                            setState(() {
-                              markerSet.clear();
-                              markerSet.add(selectedProviderMarker);
-                            });
-                            Get.back();
-                            drawPolylines();
-                          },
-                          text: "Select",
-                          fontSize: 14,
+                      Marker selectedProviderMarker = Marker(
+                        icon: BitmapDescriptor.defaultMarker,
+                        markerId: MarkerId(provider.providerID!),
+                        position: providerPosition,
+                        rotation: 360,
+                        infoWindow: InfoWindow(
+                          title: currentUserModelLocal.fullName,
+                          snippet: currentUserModelLocal.latitude,
                         ),
-                      ]) as Widget);
-                }),
-          );
-          providerSet.add(providerMarker);
-          setState(() {
-            markerSet = providerSet;
-          });
-        });
-      }
+                      );
+
+                      setState(() {
+                        markerSet.clear();
+                        markerSet.add(selectedProviderMarker);
+                      });
+                      Get.back();
+                      drawPolylines();
+                    },
+                    text: "Select",
+                    fontSize: 14,
+                  ),
+                ],
+              ) as Widget,
+            );
+          },
+        ),
+      );
+
+      setState(() {
+        providerSet.add(providerMarker);
+      });
+    });
+
+    setState(() {
+      markerSet = providerSet;
     });
   }
+
+  // displayActiveProviderMarker() async {
+  //   UserModel? currentUserModelLocal;
+  //   DatabaseReference ref = FirebaseDatabase.instance.ref().child("providers");
+  //   /* This snippet helps to display the nearby provider with marker */
+  //   setState(() {
+  //     markerSet.clear();
+  //     circleSet.clear();
+
+  //     Set<Marker> providerSet = <Marker>{};
+
+  //     for (ActiveProviderModel provider in ActiveProvider.availableProvider) {
+  //       LatLng providerPosition =
+  //           LatLng(provider.locationLat!, provider.locationLong!);
+
+  //       Future.delayed(const Duration(milliseconds: 500), () {
+  //         Marker providerMarker = Marker(
+  //           icon: BitmapDescriptor.defaultMarker,
+  //           markerId: MarkerId(provider.providerID!),
+  //           position: providerPosition,
+  //           rotation: 360,
+  //           infoWindow: InfoWindow(
+  //               title: ">>",
+  //               onTap: () async {
+  //                 await ref
+  //                     .child(provider.providerID.toString())
+  //                     .once()
+  //                     .then((data) {
+  //                   currentUserModelLocal =
+  //                       UserModel.fromSnapshot(data.snapshot);
+  //                 });
+  //                 Get.dialog(Dialogs.materialDialog(
+  //                     barrierDismissible: false,
+  //                     barrierColor: Colors.transparent,
+  //                     color: Colors.white,
+  //                     title: "Provider Information",
+  //                     titleStyle: const TextStyle(
+  //                         fontWeight: FontWeight.w800, fontSize: 20),
+  //                     customView: Container(
+  //                       padding: const EdgeInsets.symmetric(horizontal: 18),
+  //                       child: Column(
+  //                         children: [
+  //                           Row(
+  //                             children: [
+  //                               const Icon(Icons.person),
+  //                               const SizedBox(
+  //                                 width: 8,
+  //                               ),
+  //                               Expanded(
+  //                                 child: Text(
+  //                                   currentUserModelLocal!.fullName!,
+  //                                   softWrap: true,
+  //                                   overflow: TextOverflow.visible,
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                           const SizedBox(
+  //                             height: 8,
+  //                           ),
+  //                           Row(
+  //                             children: [
+  //                               const Icon(Icons.location_on_outlined),
+  //                               const SizedBox(
+  //                                 width: 8,
+  //                               ),
+  //                               Expanded(
+  //                                 child: Text(
+  //                                   currentUserModelLocal!.email!,
+  //                                   softWrap: true,
+  //                                   overflow: TextOverflow.visible,
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                           const SizedBox(
+  //                             height: 8,
+  //                           ),
+  //                           const Row(
+  //                             children: [
+  //                               Icon(Icons.phone_android_outlined),
+  //                               SizedBox(
+  //                                 width: 8,
+  //                               ),
+  //                               Expanded(
+  //                                 child: Text(
+  //                                   "Contact Number",
+  //                                   softWrap: true,
+  //                                   overflow: TextOverflow.visible,
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                           const SizedBox(
+  //                             height: 8,
+  //                           ),
+  //                           const Row(
+  //                             children: [
+  //                               Icon(Icons.car_repair_outlined),
+  //                               SizedBox(
+  //                                 width: 8,
+  //                               ),
+  //                               Expanded(
+  //                                 child: Text(
+  //                                   "Service Type",
+  //                                   softWrap: true,
+  //                                   overflow: TextOverflow.visible,
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ],
+  //                       ),
+  //                     ),
+  //                     customViewPosition: CustomViewPosition.BEFORE_ACTION,
+  //                     context: context,
+  //                     actions: [
+  //                       MFYPTextButton(
+  //                         text: "Back",
+  //                         onPressed: (() {
+  //                           Get.back();
+  //                         }),
+  //                       ),
+  //                       MFYPButton(
+  //                         onPressed: () {
+  //                           LocationDirection locationDirection =
+  //                               LocationDirection();
+  //                           locationDirection.locationLat =
+  //                               provider.locationLat;
+  //                           locationDirection.locationLong =
+  //                               provider.locationLong;
+  //                           locationDirection.providerID = provider.providerID;
+  //                           locationDirection.locationName =
+  //                               currentUserModelLocal!.locationName;
+  //                           Provider.of<MFYPUserInfo>(context, listen: false)
+  //                               .getProviderLatLng(locationDirection);
+
+  //                           Marker selectedProviderMarker = Marker(
+  //                               icon: BitmapDescriptor.defaultMarker,
+  //                               markerId: MarkerId(provider.providerID!),
+  //                               position: providerPosition,
+  //                               rotation: 360,
+  //                               infoWindow: InfoWindow(
+  //                                 title: currentUserModelLocal!.fullName,
+  //                                 snippet: currentUserModelLocal!.latitude,
+  //                               ));
+  //                           setState(() {
+  //                             markerSet.clear();
+  //                             markerSet.add(selectedProviderMarker);
+  //                           });
+  //                           Get.back();
+  //                           drawPolylines();
+  //                         },
+  //                         text: "Select",
+  //                         fontSize: 14,
+  //                       ),
+  //                     ]) as Widget);
+  //               }),
+  //         );
+  //         providerSet.add(providerMarker);
+  //         setState(() {
+  //           markerSet = providerSet;
+  //         });
+  //       });
+  //     }
+  //   });
+  // }
 
   saveRequestInfo() {
     setState(() {
@@ -739,12 +908,12 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
       "longitude": providerLocation.locationLong.toString(),
     };
 
-    Map userMeetTheProviderMap = {
-      "destination": userLocationMap,
-      "origin": providerLocationMap,
+    Map scheduleAppointmentMap = {
+      "destination": providerLocationMap,
+      "origin": userLocationMap,
       "time": DateTime.now().toString(),
-      "fullName": currentUserModel!.fullName,
-      "phone": currentUserModel!.phone,
+      "u_fullName": currentUserModel!.fullName,
+      "u_phone": currentUserModel!.phone,
       "carType": currentUserModel!.carType,
       "originAddress": userLocation.locationName,
       "destinationAddress": providerLocation.formattedAddress,
@@ -763,7 +932,7 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
     };
     option
         ? prequest!.set(providerMeetTheUser)
-        : prequest!.set(userMeetTheProviderMap);
+        : prequest!.set(scheduleAppointmentMap);
     requestUIStreamSubscription = prequest!.onValue.listen((eventSnap) {
       var eventData = eventSnap.snapshot.value as Map;
       if (eventSnap.snapshot.value == null) {
@@ -818,11 +987,8 @@ class _MFYPHomeScreenState extends State<MFYPHomeScreen> {
         }
       }
     });
-
-    String providerID =
-        context.read<MFYPUserInfo>().techSPLocation!.providerID.toString();
-
-    prepareNotificationToProvider(providerID);
+    prepareNotificationToProvider(
+        context.read<MFYPUserInfo>().techSPLocation!.providerID.toString());
   }
 
   updateProviderArrivalTime(LatLng providerLatLng) async {
